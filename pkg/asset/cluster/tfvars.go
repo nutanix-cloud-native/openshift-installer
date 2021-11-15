@@ -42,6 +42,7 @@ import (
 	gcptfvars "github.com/openshift/installer/pkg/tfvars/gcp"
 	ibmcloudtfvars "github.com/openshift/installer/pkg/tfvars/ibmcloud"
 	libvirttfvars "github.com/openshift/installer/pkg/tfvars/libvirt"
+	nutanixtfvars "github.com/openshift/installer/pkg/tfvars/nutanix"
 	openstacktfvars "github.com/openshift/installer/pkg/tfvars/openstack"
 	ovirttfvars "github.com/openshift/installer/pkg/tfvars/ovirt"
 	vspheretfvars "github.com/openshift/installer/pkg/tfvars/vsphere"
@@ -54,6 +55,7 @@ import (
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/libvirt"
 	"github.com/openshift/installer/pkg/types/none"
+	"github.com/openshift/installer/pkg/types/nutanix"
 	"github.com/openshift/installer/pkg/types/openstack"
 	"github.com/openshift/installer/pkg/types/ovirt"
 	"github.com/openshift/installer/pkg/types/vsphere"
@@ -770,6 +772,36 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
 		}
 		t.FileList = append(t.FileList, &asset.File{
 			Filename: TfPlatformVarsFileName,
+			Data:     data,
+		})
+	case nutanix.Name:
+		controlPlanes, err := mastersAsset.Machines()
+		errors.Wrapf(err, "control planes length: %d", len(controlPlanes))
+		if err != nil {
+			return errors.Wrapf(err, "error getting control plane machines")
+		}
+		if rhcosImage == nil {
+			return errors.New("Unable to retrieve rhcos image")
+		}
+		data, err = nutanixtfvars.TFVars(
+			nutanixtfvars.TFVarsSources{
+				PrismCentral:          installConfig.Config.Nutanix.PrismCentral,
+				Insecure:              installConfig.Config.Nutanix.Insecure,
+				Port:                  installConfig.Config.Nutanix.Port,
+				Username:              installConfig.Config.Nutanix.Username,
+				Password:              installConfig.Config.Nutanix.Password,
+				PrismElement:          installConfig.Config.Nutanix.PrismElement,
+				ImageURL:              string(*rhcosImage),
+				BootstrapIgnitionData: bootstrapIgn,
+				ClusterID:             clusterID.InfraID,
+				Subnet:                installConfig.Config.Nutanix.Subnet,
+			},
+		)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get %s Terraform variables", platform)
+		}
+		t.FileList = append(t.FileList, &asset.File{
+			Filename: fmt.Sprintf(TfPlatformVarsFileName, platform),
 			Data:     data,
 		})
 	default:

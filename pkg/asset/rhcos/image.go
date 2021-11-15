@@ -23,6 +23,7 @@ import (
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/libvirt"
 	"github.com/openshift/installer/pkg/types/none"
+	"github.com/openshift/installer/pkg/types/nutanix"
 	"github.com/openshift/installer/pkg/types/openstack"
 	"github.com/openshift/installer/pkg/types/ovirt"
 	"github.com/openshift/installer/pkg/types/vsphere"
@@ -161,6 +162,18 @@ func osImage(config *types.InstallConfig) (string, error) {
 			return "", err
 		}
 		return osimage, nil
+	case nutanix.Name:
+		op := config.Platform.Nutanix
+		if op != nil {
+			if oi := op.ClusterOSImage; oi != "" {
+				return oi, nil
+			}
+		}
+		// if a, ok := streamArch.Artifacts["nutanix"]; ok {
+		if a, ok := streamArch.Artifacts["openstack"]; ok {
+			return rhcos.FindArtifactURL(a)
+		}
+		return "", fmt.Errorf("%s: No Nutanix build found", st.FormatPrefix(archName))
 	case none.Name:
 		return "", nil
 	default:
