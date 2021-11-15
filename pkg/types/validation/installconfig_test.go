@@ -20,6 +20,7 @@ import (
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/libvirt"
 	"github.com/openshift/installer/pkg/types/none"
+	"github.com/openshift/installer/pkg/types/nutanix"
 	"github.com/openshift/installer/pkg/types/openstack"
 	"github.com/openshift/installer/pkg/types/ovirt"
 	"github.com/openshift/installer/pkg/types/vsphere"
@@ -102,6 +103,17 @@ func validVSpherePlatform() *vsphere.Platform {
 		Password:         "test-password",
 		Datacenter:       "test-datacenter",
 		DefaultDatastore: "test-datastore",
+	}
+}
+
+func validNutanixPlatform() *nutanix.Platform {
+	return &nutanix.Platform{
+		PrismCentral: "test-pc",
+		PrismElement: "test-pe",
+		Username:     "test-username",
+		Password:     "test-password",
+		// DefaultStorageContainer: "test-storage-container",
+		Subnet: "test-subnet",
 	}
 }
 
@@ -524,7 +536,7 @@ func TestValidateInstallConfig(t *testing.T) {
 				c.Platform = types.Platform{}
 				return c
 			}(),
-			expectedError: `^platform: Invalid value: "": must specify one of the platforms \(alibabacloud, aws, azure, baremetal, gcp, ibmcloud, none, openstack, ovirt, vsphere\)$`,
+			expectedError: `^platform: Invalid value: "": must specify one of the platforms \(alibabacloud, aws, azure, baremetal, gcp, ibmcloud, none, openstack, ovirt, vsphere, nutanix\)$`,
 		},
 		{
 			name: "multiple platforms",
@@ -555,7 +567,7 @@ func TestValidateInstallConfig(t *testing.T) {
 				}
 				return c
 			}(),
-			expectedError: `^platform: Invalid value: "libvirt": must specify one of the platforms \(alibabacloud, aws, azure, baremetal, gcp, ibmcloud, none, openstack, ovirt, vsphere\)$`,
+			expectedError: `^platform: Invalid value: "libvirt": must specify one of the platforms \(alibabacloud, aws, azure, baremetal, gcp, ibmcloud, none, openstack, ovirt, vsphere, nutanix\)$`,
 		},
 		{
 			name: "invalid libvirt platform",
@@ -567,7 +579,7 @@ func TestValidateInstallConfig(t *testing.T) {
 				c.Platform.Libvirt.URI = ""
 				return c
 			}(),
-			expectedError: `^\[platform: Invalid value: "libvirt": must specify one of the platforms \(alibabacloud, aws, azure, baremetal, gcp, ibmcloud, none, openstack, ovirt, vsphere\), platform\.libvirt\.uri: Invalid value: "": invalid URI "" \(no scheme\)]$`,
+			expectedError: `^\[platform: Invalid value: "libvirt": must specify one of the platforms \(alibabacloud, aws, azure, baremetal, gcp, ibmcloud, none, openstack, ovirt, vsphere, nutanix\), platform\.libvirt\.uri: Invalid value: "": invalid URI "" \(no scheme\)]$`,
 		},
 		{
 			name: "valid none platform",
@@ -696,6 +708,26 @@ func TestValidateInstallConfig(t *testing.T) {
 				return c
 			}(),
 			expectedError: `^platform\.baremetal\.ingressVIP: Invalid value: "10\.1\.0\.7": IP expected to be in one of the machine networks: 10.0.0.0/16$`,
+		}, {
+			name: "valid nutanix platform",
+			installConfig: func() *types.InstallConfig {
+				c := validInstallConfig()
+				c.Platform = types.Platform{
+					Nutanix: validNutanixPlatform(),
+				}
+				return c
+			}(),
+		}, {
+			name: "invalid nutanix platform",
+			installConfig: func() *types.InstallConfig {
+				c := validInstallConfig()
+				c.Platform = types.Platform{
+					Nutanix: validNutanixPlatform(),
+				}
+				c.Platform.Nutanix.PrismCentral = ""
+				return c
+			}(),
+			expectedError: `^platform\.nutanix.PrismCentral: Required value: must specify the name of the Prism Central$`,
 		}, {
 			name: "valid vsphere platform",
 			installConfig: func() *types.InstallConfig {
