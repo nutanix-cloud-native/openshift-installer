@@ -13,6 +13,7 @@ import (
 	"github.com/openshift/installer/pkg/terraform/stages/libvirt"
 	"github.com/openshift/installer/pkg/terraform/stages/openstack"
 	"github.com/openshift/installer/pkg/terraform/stages/ovirt"
+	"github.com/openshift/installer/pkg/terraform/stages/nutanix"
 	"github.com/openshift/installer/pkg/terraform/stages/vsphere"
 	alibabacloudtypes "github.com/openshift/installer/pkg/types/alibabacloud"
 	awstypes "github.com/openshift/installer/pkg/types/aws"
@@ -23,6 +24,7 @@ import (
 	libvirttypes "github.com/openshift/installer/pkg/types/libvirt"
 	openstacktypes "github.com/openshift/installer/pkg/types/openstack"
 	ovirttypes "github.com/openshift/installer/pkg/types/ovirt"
+	nutanixtypes "github.com/openshift/installer/pkg/types/nutanix"
 	vspheretypes "github.com/openshift/installer/pkg/types/vsphere"
 )
 
@@ -51,6 +53,8 @@ func StagesForPlatform(platform string) []terraform.Stage {
 		return ovirt.PlatformStages
 	case vspheretypes.Name:
 		return vsphere.PlatformStages
+	case nutanixtypes.Name:
+		return nutanix.PlatformStages
 	default:
 		panic(fmt.Sprintf("unsupported platform %q", platform))
 	}
