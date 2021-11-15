@@ -56,6 +56,7 @@ import (
 	ibmcloudtypes "github.com/openshift/installer/pkg/types/ibmcloud"
 	libvirttypes "github.com/openshift/installer/pkg/types/libvirt"
 	nonetypes "github.com/openshift/installer/pkg/types/none"
+	nutanixtypes "github.com/openshift/installer/pkg/types/nutanix"
 	openstacktypes "github.com/openshift/installer/pkg/types/openstack"
 	ovirttypes "github.com/openshift/installer/pkg/types/ovirt"
 	vspheretypes "github.com/openshift/installer/pkg/types/vsphere"
@@ -155,6 +156,17 @@ func defaultVSphereMachinePoolPlatform() vspheretypes.MachinePool {
 		MemoryMiB:         8192,
 		OSDisk: vspheretypes.OSDisk{
 			DiskSizeGB: decimalRootVolumeSize,
+		},
+	}
+}
+
+func defaultNutanixMachinePoolPlatform() nutanixtypes.MachinePool {
+	return nutanixtypes.MachinePool{
+		NumCPUs:           2,
+		NumCoresPerSocket: 2,
+		MemoryMiB:         8192,
+		OSDisk: nutanixtypes.OSDisk{
+			DiskSizeGB: 120,
 		},
 	}
 }
@@ -488,6 +500,21 @@ func (w *Worker) Generate(dependencies asset.Parents) error {
 			for _, set := range sets {
 				machineSets = append(machineSets, set)
 			}
+		case nutanixtypes.Name:
+			return nil
+		// 	mpool := defaultNutanixMachinePoolPlatform()
+		// 	mpool.Set(ic.Platform.Nutanix.DefaultMachinePlatform)
+		// 	mpool.Set(pool.Platform.Nutanix)
+		// 	pool.Platform.Nutanix = &mpool
+		// 	imageName := clusterID.InfraID + "-rhcos"
+
+		// 	sets, err := nutanix.MachineSets(clusterID.InfraID, ic, &pool, imageName, "worker", "worker-user-data")
+		// 	if err != nil {
+		// 		return errors.Wrap(err, "failed to create worker machine objects")
+		// 	}
+		// 	for _, set := range sets {
+		// 		machineSets = append(machineSets, set)
+		// 	}
 		case nonetypes.Name:
 		default:
 			return fmt.Errorf("invalid Platform")

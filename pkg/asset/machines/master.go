@@ -42,6 +42,7 @@ import (
 	"github.com/openshift/installer/pkg/asset/machines/ibmcloud"
 	"github.com/openshift/installer/pkg/asset/machines/libvirt"
 	"github.com/openshift/installer/pkg/asset/machines/machineconfig"
+	"github.com/openshift/installer/pkg/asset/machines/nutanix"
 	"github.com/openshift/installer/pkg/asset/machines/openstack"
 	"github.com/openshift/installer/pkg/asset/machines/ovirt"
 	"github.com/openshift/installer/pkg/asset/machines/vsphere"
@@ -58,6 +59,7 @@ import (
 	ibmcloudtypes "github.com/openshift/installer/pkg/types/ibmcloud"
 	libvirttypes "github.com/openshift/installer/pkg/types/libvirt"
 	nonetypes "github.com/openshift/installer/pkg/types/none"
+	nutanixtypes "github.com/openshift/installer/pkg/types/nutanix"
 	openstacktypes "github.com/openshift/installer/pkg/types/openstack"
 	ovirttypes "github.com/openshift/installer/pkg/types/ovirt"
 	vspheretypes "github.com/openshift/installer/pkg/types/vsphere"
@@ -418,6 +420,21 @@ func (m *Master) Generate(dependencies asset.Parents) error {
 			return errors.Wrap(err, "failed to create master machine objects")
 		}
 		vsphere.ConfigMasters(machines, clusterID.InfraID)
+	case nutanixtypes.Name:
+		mpool := defaultNutanixMachinePoolPlatform()
+		mpool.NumCPUs = 4
+		mpool.NumCoresPerSocket = 4
+		mpool.MemoryMiB = 16384
+		mpool.Set(ic.Platform.Nutanix.DefaultMachinePlatform)
+		mpool.Set(pool.Platform.Nutanix)
+		pool.Platform.Nutanix = &mpool
+		templateName := clusterID.InfraID + "-rhcos"
+
+		machines, err = nutanix.Machines(clusterID.InfraID, ic, &pool, templateName, "master", "master-user-data")
+		if err != nil {
+			return errors.Wrap(err, "failed to create master machine objects")
+		}
+		nutanix.ConfigMasters(machines, clusterID.InfraID)
 	case nonetypes.Name:
 	default:
 		return fmt.Errorf("invalid Platform")
