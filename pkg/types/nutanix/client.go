@@ -117,19 +117,15 @@ func WaitForTask(clientV3 nutanixClientV3.Service, taskUUID string) error {
 	finished := false
 	var err error
 	for start := time.Now(); time.Since(start) < Timeout; {
-		logrus.Infof("Waiting for task: %s", taskUUID)
 		finished, err = isTaskFinished(clientV3, taskUUID)
-		logrus.Infof("Task status", finished)
 		if err != nil {
 			return err
 		}
 		if finished {
 			break
 		}
-		logrus.Infof("Sleeping for ", SleepTime)
 		time.Sleep(SleepTime)
 	}
-	logrus.Infof("Task status post loop ", finished)
 	if !finished {
 		return errors.Errorf("timeout while waiting for task UUID: %s", taskUUID)
 	}
