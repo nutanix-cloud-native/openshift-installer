@@ -46,6 +46,9 @@ require (
 	github.com/hashicorp/terraform-provider-google v1.20.1-0.20200922000057-78da461b151a
 	github.com/hashicorp/terraform-provider-kubernetes v1.13.3
 	github.com/hashicorp/terraform-provider-vsphere v1.24.3
+	github.com/hashicorp/vault v1.3.0 // indirect
+	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
+	github.com/kdomanski/iso9660 v0.2.1
 	github.com/libvirt/libvirt-go v5.10.0+incompatible
 	github.com/metal3-io/baremetal-operator v0.0.0-20211201170610-92ffa60c683d
 	github.com/metal3-io/baremetal-operator/apis v0.0.0
@@ -79,6 +82,7 @@ require (
 	github.com/terraform-providers/terraform-provider-azurestack v0.10.0
 	github.com/terraform-providers/terraform-provider-ignition/v2 v2.1.0
 	github.com/terraform-providers/terraform-provider-local v1.4.0
+	github.com/terraform-providers/terraform-provider-nutanix v1.1.0
 	github.com/terraform-providers/terraform-provider-random v1.3.2-0.20190925210718-83518d96ae4f
 	github.com/ulikunitz/xz v0.5.8
 	github.com/vincent-petithory/dataurl v0.0.0-20191104211930-d1553a71de50
@@ -429,3 +433,5 @@ replace (
 	google.golang.org/genproto => google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
 	google.golang.org/grpc => google.golang.org/grpc v1.35.0
 )
+
+replace github.com/terraform-providers/terraform-provider-nutanix => github.com/nutanix/terraform-provider-nutanix v1.2.1
