@@ -7,7 +7,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-
+	"fmt"
+	
 	"github.com/ghodss/yaml"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
@@ -34,6 +35,7 @@ import (
 	openstacktypes "github.com/openshift/installer/pkg/types/openstack"
 	ovirttypes "github.com/openshift/installer/pkg/types/ovirt"
 	vspheretypes "github.com/openshift/installer/pkg/types/vsphere"
+	nutanixtypes "github.com/openshift/installer/pkg/types/nutanix"
 )
 
 const (
@@ -211,6 +213,13 @@ func (o *Openshift) Generate(dependencies asset.Parents) error {
 				Base64encodeCABundle: base64.StdEncoding.EncodeToString([]byte(conf.CABundle)),
 			},
 		}
+	case nutanixtypes.Name:
+		secretString := fmt.Sprintf("%s:%s:%s:%s", installConfig.Config.Nutanix.PrismCentral, installConfig.Config.Nutanix.Port, installConfig.Config.Nutanix.Username, installConfig.Config.Nutanix.Password)
+		cloudCreds = cloudCredsSecretData{
+			Nutanix: &NutanixCredsSecretData{
+				Base64encodeKey: base64.StdEncoding.EncodeToString([]byte(secretString)),
+			},
+		}
 	}
 
 	templateData := &openshiftTemplateData{
@@ -236,7 +245,7 @@ func (o *Openshift) Generate(dependencies asset.Parents) error {
 	}
 
 	switch platform {
-	case awstypes.Name, openstacktypes.Name, vspheretypes.Name, azuretypes.Name, gcptypes.Name, ibmcloudtypes.Name, ovirttypes.Name:
+	case awstypes.Name, openstacktypes.Name, vspheretypes.Name, azuretypes.Name, gcptypes.Name, ibmcloudtypes.Name, ovirttypes.Name, nutanixtypes.Name:
 		if installConfig.Config.CredentialsMode != types.ManualCredentialsMode {
 			assetData["99_cloud-creds-secret.yaml"] = applyTemplateData(cloudCredsSecret.Files()[0].Data, templateData)
 		}
