@@ -213,19 +213,13 @@ func (i *Infrastructure) Generate(dependencies asset.Parents) error {
 			IngressIP:           installConfig.Config.Ovirt.IngressVIP,
 		}
 	case nutanix.Name:
-		config.Spec.PlatformSpec.Type = configv1.BareMetalPlatformType
-		config.Status.PlatformStatus.BareMetal = &configv1.BareMetalPlatformStatus{
-			APIServerInternalIP: installConfig.Config.Nutanix.APIVIP,
-			IngressIP:           installConfig.Config.Nutanix.IngressVIP,
+		config.Spec.PlatformSpec.Type = configv1.NutanixPlatformType
+		if installConfig.Config.Nutanix.APIVIP != "" {
+			config.Status.PlatformStatus.Nutanix = &configv1.NutanixPlatformStatus{
+				APIServerInternalIP: installConfig.Config.Nutanix.APIVIP,
+				IngressIP:           installConfig.Config.Nutanix.IngressVIP,
+			}
 		}
-		// config.Spec.PlatformSpec.Type = configv1.NonePlatformType
-		// config.Spec.PlatformSpec.Type = "nutanix" //configv1.NutanixPlatformType
-		// if installConfig.Config.Nutanix.APIVIP != "" {
-		// 	config.Status.PlatformStatus.Nutanix = &configv1.NutanixPlatformStatus{
-		// 		APIServerInternalIP: installConfig.Config.Nutanix.APIVIP,
-		// 		IngressIP:           installConfig.Config.Nutanix.IngressVIP,
-		// 	}
-		// }
 	default:
 		config.Spec.PlatformSpec.Type = configv1.NonePlatformType
 	}
