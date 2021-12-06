@@ -9,6 +9,10 @@ import (
 
 	"github.com/ghodss/yaml"
 	baremetalhost "github.com/metal3-io/baremetal-operator/apis/metal3.io/v1alpha1"
+	baremetalapi "github.com/metal3-io/cluster-api-provider-baremetal/pkg/apis"
+	baremetalprovider "github.com/metal3-io/cluster-api-provider-baremetal/pkg/apis/baremetal/v1alpha1"
+	nutanixapi "github.com/nutanix-core/cluster-api-openshift-mapi-provider-nutanix/pkg/apis"
+	nutanixprovider "github.com/nutanix-core/cluster-api-openshift-mapi-provider-nutanix/pkg/apis/nutanixprovider/v1beta1"
 	machineapi "github.com/openshift/api/machine/v1beta1"
 	alibabacloudapi "github.com/openshift/cluster-api-provider-alibaba/pkg/apis"
 	alibabacloudprovider "github.com/openshift/cluster-api-provider-alibaba/pkg/apis/alibabacloudprovider/v1beta1"
@@ -575,6 +579,7 @@ func (m *Master) Machines() ([]machineapi.Machine, error) {
 		&machineapi.GCPMachineProviderSpec{},
 	)
 	machineapi.AddToScheme(scheme)
+	nutanixapi.AddToScheme(scheme)
 	decoder := serializer.NewCodecFactory(scheme).UniversalDecoder(
 		alibabacloudprovider.SchemeGroupVersion,
 		awsprovider.SchemeGroupVersion,
@@ -584,6 +589,7 @@ func (m *Master) Machines() ([]machineapi.Machine, error) {
 		openstackprovider.SchemeGroupVersion,
 		machineapi.SchemeGroupVersion,
 		ovirtprovider.SchemeGroupVersion,
+		nutanixprovider.SchemeGroupVersion,
 	)
 
 	machines := []machineapi.Machine{}

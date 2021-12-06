@@ -11,6 +11,9 @@ import (
 	coreosarch "github.com/coreos/stream-metadata-go/arch"
 	"github.com/ghodss/yaml"
 	alibabacloudprovider "github.com/openshift/cluster-api-provider-alibaba/pkg/apis/alibabacloudprovider/v1beta1"
+
+	nutanixprovider "github.com/nutanix-core/cluster-api-openshift-mapi-provider-nutanix/pkg/apis/nutanixprovider/v1beta1"
+	gcpprovider "github.com/openshift/cluster-api-provider-gcp/pkg/apis/gcpprovider/v1beta1"
 	ibmcloudprovider "github.com/openshift/cluster-api-provider-ibmcloud/pkg/apis/ibmcloudprovider/v1beta1"
 	libvirtprovider "github.com/openshift/cluster-api-provider-libvirt/pkg/apis/libvirtproviderconfig/v1beta1"
 	ovirtprovider "github.com/openshift/cluster-api-provider-ovirt/pkg/apis/ovirtprovider/v1beta1"
@@ -775,14 +778,18 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
 			Data:     data,
 		})
 	case nutanix.Name:
-		controlPlanes, err := mastersAsset.Machines()
-		errors.Wrapf(err, "control planes length: %d", len(controlPlanes))
-		if err != nil {
-			return errors.Wrapf(err, "error getting control plane machines")
-		}
 		if rhcosImage == nil {
 			return errors.New("Unable to retrieve rhcos image")
 		}
+		controlPlanes, err := mastersAsset.Machines()
+		if err != nil {
+			return errors.Wrapf(err, "error getting control plane machines")
+		}
+		controlPlaneConfigs := make([]*nutanixprovider.NutanixMachineProviderConfig, len(controlPlanes))
+		for i, c := range controlPlanes {
+			controlPlaneConfigs[i] = c.Spec.ProviderSpec.Value.Object.(*nutanixprovider.NutanixMachineProviderConfig)
+		}
+
 		data, err = nutanixtfvars.TFVars(
 			nutanixtfvars.TFVarsSources{
 				PrismCentral:          installConfig.Config.Nutanix.PrismCentral,
@@ -794,7 +801,7 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
 				ImageURL:              string(*rhcosImage),
 				BootstrapIgnitionData: bootstrapIgn,
 				ClusterID:             clusterID.InfraID,
-				Subnet:                installConfig.Config.Nutanix.Subnet,
+				ControlPlaneConfigs:   controlPlaneConfigs,
 			},
 		)
 		if err != nil {

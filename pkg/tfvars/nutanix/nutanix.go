@@ -3,6 +3,8 @@ package nutanix
 import (
 	"encoding/json"
 	"fmt"
+
+	nutanixapis "github.com/nutanix-core/cluster-api-openshift-mapi-provider-nutanix/pkg/apis/nutanixprovider/v1beta1"
 	"github.com/openshift/installer/pkg/tfvars/internal/cache"
 	nutanixtypes "github.com/openshift/installer/pkg/types/nutanix"
 	"github.com/pkg/errors"
@@ -14,9 +16,9 @@ type config struct {
 	Username               string `json:"username"`
 	Password               string `json:"password"`
 	MemoryMiB              int64  `json:"nutanix_control_plane_memory_mib"`
-	DiskGiB                int32  `json:"nutanix_control_plane_disk_gib"`
-	NumCPUs                int32  `json:"nutanix_control_plane_num_cpus"`
-	NumCoresPerSocket      int32  `json:"nutanix_control_plane_cores_per_socket"`
+	DiskSizeMib            int64  `json:"nutanix_control_plane_disk_mib"`
+	NumCPUs                int64  `json:"nutanix_control_plane_num_cpus"`
+	NumCoresPerSocket      int64  `json:"nutanix_control_plane_cores_per_socket"`
 	PrismElement           string `json:"nutanix_prism_element"`
 	Insecure               bool   `json:"insecure"`
 	Subnet                 string `json:"nutanix_subnet"`
@@ -36,8 +38,7 @@ type TFVarsSources struct {
 	Insecure              bool
 	BootstrapIgnitionData string
 	ClusterID             string
-	//TODO: fetch from control plane configs
-	Subnet string
+	ControlPlaneConfigs   []*nutanixapis.NutanixMachineProviderConfig
 }
 
 //TFVars generate Nutanix-specific Terraform variables
@@ -50,25 +51,26 @@ func TFVars(sources TFVarsSources) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create bootstrap ignition iso")
 	}
+	controlPlaneConfig := sources.ControlPlaneConfigs[0]
 	cfg := &config{
 		Port:                   sources.Port,
 		Insecure:               sources.Insecure,
 		PrismCentral:           sources.PrismCentral,
 		Username:               sources.Username,
 		Password:               sources.Password,
-		MemoryMiB:              16384, //TODO: need to fetch from control plane config
-		DiskGiB:                120,   //TODO: need to fetch from control plane config
-		NumCPUs:                4,     //TODO: need to fetch from control plane config
-		NumCoresPerSocket:      4,     //TODO: need to fetch from control plane config
+		MemoryMiB:              controlPlaneConfig.MemorySizeMib,
+		DiskSizeMib:            controlPlaneConfig.DiskSizeMib,
+		NumCPUs:                controlPlaneConfig.NumSockets,
+		NumCoresPerSocket:      controlPlaneConfig.NumVcpusPerSocket,
 		PrismElement:           sources.PrismElement,
-		Subnet:                 sources.Subnet, //TODO: need to fetch from control plane config
-		Image:                  generateImageName(sources.ClusterID), //"rhcos-manual", //TODO: need to fetch from control plane config
+		Subnet:                 controlPlaneConfig.SubnetUUID,
+		Image:                  controlPlaneConfig.ImageName,
 		ImageFilePath:          cachedImage,
 		BootstrapIgnitionImage: bootstrapIgnitionImage,
 	}
 	return json.MarshalIndent(cfg, "", "  ")
 }
 
-func generateImageName(infraID string ) string {
-	return fmt.Sprintf("%s-rhcos",infraID)
+func generateImageName(infraID string) string {
+	return fmt.Sprintf("%s-rhcos", infraID)
 }

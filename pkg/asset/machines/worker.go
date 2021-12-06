@@ -8,6 +8,10 @@ import (
 	"strings"
 
 	"github.com/ghodss/yaml"
+	baremetalapi "github.com/metal3-io/cluster-api-provider-baremetal/pkg/apis"
+	baremetalprovider "github.com/metal3-io/cluster-api-provider-baremetal/pkg/apis/baremetal/v1alpha1"
+	nutanixproviderapi "github.com/nutanix-core/cluster-api-openshift-mapi-provider-nutanix/pkg/apis"
+	nutanixprovider "github.com/nutanix-core/cluster-api-openshift-mapi-provider-nutanix/pkg/apis/nutanixprovider/v1beta1"
 	machineapi "github.com/openshift/api/machine/v1beta1"
 	alibabacloudapi "github.com/openshift/cluster-api-provider-alibaba/pkg/apis"
 	alibabacloudprovider "github.com/openshift/cluster-api-provider-alibaba/pkg/apis/alibabacloudprovider/v1beta1"
@@ -40,6 +44,7 @@ import (
 	"github.com/openshift/installer/pkg/asset/machines/ibmcloud"
 	"github.com/openshift/installer/pkg/asset/machines/libvirt"
 	"github.com/openshift/installer/pkg/asset/machines/machineconfig"
+	"github.com/openshift/installer/pkg/asset/machines/nutanix"
 	"github.com/openshift/installer/pkg/asset/machines/openstack"
 	"github.com/openshift/installer/pkg/asset/machines/ovirt"
 	"github.com/openshift/installer/pkg/asset/machines/vsphere"
@@ -166,7 +171,7 @@ func defaultNutanixMachinePoolPlatform() nutanixtypes.MachinePool {
 		NumCoresPerSocket: 2,
 		MemoryMiB:         8192,
 		OSDisk: nutanixtypes.OSDisk{
-			DiskSizeGB: 120,
+			DiskSizeMib: 120 * 1024 * 1024 * 1024,
 		},
 	}
 }
@@ -501,20 +506,19 @@ func (w *Worker) Generate(dependencies asset.Parents) error {
 				machineSets = append(machineSets, set)
 			}
 		case nutanixtypes.Name:
-			return nil
-		// 	mpool := defaultNutanixMachinePoolPlatform()
-		// 	mpool.Set(ic.Platform.Nutanix.DefaultMachinePlatform)
-		// 	mpool.Set(pool.Platform.Nutanix)
-		// 	pool.Platform.Nutanix = &mpool
-		// 	imageName := clusterID.InfraID + "-rhcos"
+			mpool := defaultNutanixMachinePoolPlatform()
+			mpool.Set(ic.Platform.Nutanix.DefaultMachinePlatform)
+			mpool.Set(pool.Platform.Nutanix)
+			pool.Platform.Nutanix = &mpool
+			imageName := clusterID.InfraID + "-rhcos"
 
-		// 	sets, err := nutanix.MachineSets(clusterID.InfraID, ic, &pool, imageName, "worker", "worker-user-data")
-		// 	if err != nil {
-		// 		return errors.Wrap(err, "failed to create worker machine objects")
-		// 	}
-		// 	for _, set := range sets {
-		// 		machineSets = append(machineSets, set)
-		// 	}
+			sets, err := nutanix.MachineSets(clusterID.InfraID, ic, &pool, imageName, "worker", "worker-user-data")
+			if err != nil {
+				return errors.Wrap(err, "failed to create worker machine objects")
+			}
+			for _, set := range sets {
+				machineSets = append(machineSets, set)
+			}
 		case nonetypes.Name:
 		default:
 			return fmt.Errorf("invalid Platform")
@@ -604,6 +608,7 @@ func (w *Worker) MachineSets() ([]machineapi.MachineSet, error) {
 		&machineapi.GCPMachineProviderSpec{},
 	)
 	machineapi.AddToScheme(scheme)
+	nutanixproviderapi.AddToScheme(scheme)
 	decoder := serializer.NewCodecFactory(scheme).UniversalDecoder(
 		alibabacloudprovider.SchemeGroupVersion,
 		awsprovider.SchemeGroupVersion,
@@ -613,6 +618,7 @@ func (w *Worker) MachineSets() ([]machineapi.MachineSet, error) {
 		openstackprovider.SchemeGroupVersion,
 		ovirtprovider.SchemeGroupVersion,
 		machineapi.SchemeGroupVersion,
+		nutanixprovider.SchemeGroupVersion,
 	)
 
 	machineSets := []machineapi.MachineSet{}

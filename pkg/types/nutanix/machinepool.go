@@ -6,13 +6,13 @@ type MachinePool struct {
 	// NumCPUs is the total number of virtual processor cores to assign a vm.
 	//
 	// +optional
-	NumCPUs int32 `json:"cpus"`
+	NumCPUs int64 `json:"cpus"`
 
 	// NumCoresPerSocket is the number of cores per socket in a vm. The number
 	// of vCPUs on the vm will be NumCPUs/NumCoresPerSocket.
 	//
 	// +optional
-	NumCoresPerSocket int32 `json:"coresPerSocket"`
+	NumCoresPerSocket int64 `json:"coresPerSocket"`
 
 	// Memory is the size of a VM's memory in MB.
 	//
@@ -27,10 +27,10 @@ type MachinePool struct {
 
 // OSDisk defines the disk for a virtual machine.
 type OSDisk struct {
-	// DiskSizeGB defines the size of disk in GB.
+	// DiskSizeMib defines the size of disk in MiB.
 	//
 	// +optional
-	DiskSizeGB int32 `json:"diskSizeGB"`
+	DiskSizeMib int64 `json:"diskSizeMib"`
 }
 
 // Set sets the values from `required` to `p`.
@@ -51,7 +51,7 @@ func (p *MachinePool) Set(required *MachinePool) {
 		p.MemoryMiB = required.MemoryMiB
 	}
 
-	if required.OSDisk.DiskSizeGB != 0 {
-		p.OSDisk.DiskSizeGB = required.OSDisk.DiskSizeGB
+	if required.OSDisk.DiskSizeMib != 0 {
+		p.OSDisk.DiskSizeMib = required.OSDisk.DiskSizeMib
 	}
 }

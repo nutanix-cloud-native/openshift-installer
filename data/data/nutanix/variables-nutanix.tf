@@ -64,7 +64,7 @@ variable "nutanix_control_plane_memory_mib" {
   type = number
 }
 
-variable "nutanix_control_plane_disk_gib" {
+variable "nutanix_control_plane_disk_mib" {
   type = number
 }
 

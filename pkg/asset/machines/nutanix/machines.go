@@ -4,7 +4,7 @@ package nutanix
 import (
 	"fmt"
 
-	baremetalprovider "github.com/metal3-io/cluster-api-provider-baremetal/pkg/apis/baremetal/v1alpha1"
+	nutanixapis "github.com/nutanix-core/cluster-api-openshift-mapi-provider-nutanix/pkg/apis/nutanixprovider/v1beta1"
 	machineapi "github.com/openshift/api/machine/v1beta1"
 	"github.com/openshift/installer/pkg/types"
 	"github.com/openshift/installer/pkg/types/nutanix"
@@ -23,6 +23,7 @@ func Machines(clusterID string, config *types.InstallConfig, pool *types.Machine
 		return nil, fmt.Errorf("non-nutanix machine-pool: %q", poolPlatform)
 	}
 	platform := config.Platform.Nutanix
+	mpool := pool.Platform.Nutanix
 
 	total := int64(1)
 	if pool.Replicas != nil {
@@ -30,7 +31,7 @@ func Machines(clusterID string, config *types.InstallConfig, pool *types.Machine
 	}
 	var machines []machineapi.Machine
 	for idx := int64(0); idx < total; idx++ {
-		provider, err := provider(clusterID, platform, osImage, userDataSecret)
+		provider, err := provider(clusterID, platform, mpool, osImage, userDataSecret)
 
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create provider")
@@ -61,21 +62,23 @@ func Machines(clusterID string, config *types.InstallConfig, pool *types.Machine
 	return machines, nil
 }
 
-func provider(clusterID string, platform *nutanix.Platform, osImage string, userDataSecret string) (*baremetalprovider.BareMetalMachineProviderSpec, error) {
-
-	return &baremetalprovider.BareMetalMachineProviderSpec{
+func provider(clusterID string, platform *nutanix.Platform, mpool *nutanix.MachinePool, osImage string, userDataSecret string) (*nutanixapis.NutanixMachineProviderConfig, error) {
+	return &nutanixapis.NutanixMachineProviderConfig{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: "baremetal.cluster.k8s.io/v1alpha1",
-			Kind:       "BareMetalMachineProviderSpec",
+			APIVersion: nutanixapis.SchemeGroupVersion.String(),
+			Kind:       "NutanixMachineProviderConfig",
 		},
-		Image:    baremetalprovider.Image{},
-		UserData: &corev1.SecretReference{Name: userDataSecret},
+		UserDataSecret:       &corev1.LocalObjectReference{Name: userDataSecret},
+		CredentialsSecret:    &corev1.LocalObjectReference{Name: "nutanix-credentials"},
+		ImageName:            osImage,
+		SubnetUUID:           platform.Subnet,
+		NumVcpusPerSocket:    mpool.NumCoresPerSocket,
+		NumSockets:           mpool.NumCPUs,
+		MemorySizeMib:        mpool.MemoryMiB,
+		PowerState:           "ON",
+		ClusterReferenceUuid: platform.PrismElement,
 	}, nil
 }
-
-// func provider(clusterID string, platform *nutanix.Platform, mpool *nutanix.MachinePool, osImage string, userDataSecret string) (*nutanixapis.NutanixMachineSpec, error) {
-// 	return nil, nil
-// }
 
 // ConfigMasters sets the PublicIP flag and assigns a set of load balancers to the given machines
 func ConfigMasters(machines []machineapi.Machine, clusterID string) {

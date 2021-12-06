@@ -35,7 +35,7 @@ resource "nutanix_virtual_machine" "vm_bootstrap" {
       kind = "image"
       uuid = var.image_id
     }
-    disk_size_bytes = 120 * 1024 * 1024 * 1024
+    disk_size_bytes = var.nutanix_control_plane_disk_mib * 1024 * 1024 * 1024
   }
 
   disk_list {
