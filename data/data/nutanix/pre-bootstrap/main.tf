@@ -11,27 +11,17 @@ provider "nutanix" {
   port         = var.port
 }
 
-
-data "nutanix_cluster" "prism_element" {
-  name = var.nutanix_prism_element
-}
-
-data "nutanix_subnet" "subnet" {
-  subnet_name = var.nutanix_subnet
-}
-
-
 #TODO: Upload instead of query
-resource "nutanix_image" "rhcos" {
-  name        = var.nutanix_image
-  source_path  = var.nutanix_image_filepath
-  description = local.description
-}
+# resource "nutanix_image" "rhcos" {
+#   name        = var.nutanix_image
+#   source_path  = var.nutanix_image_filepath
+#   description = local.description
+# }
 
 //for dev
-# data "nutanix_image" "rhcos" {
-#   image_name = var.nutanix_image
-# }
+data "nutanix_image" "rhcos" {
+  image_name = "rhcos-manual"
+}
 
 resource "nutanix_category_key" "ocp_category_key" {
   name = "openshift-${var.cluster_id}"

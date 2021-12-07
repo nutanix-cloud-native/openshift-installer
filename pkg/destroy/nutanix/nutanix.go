@@ -61,6 +61,11 @@ func New(logger logrus.FieldLogger, metadata *installertypes.ClusterMetadata) (p
 func (o *ClusterUninstaller) Run() (*installertypes.ClusterQuota, error) {
 	ec := createExpectedCategory(o.InfraID)
 	bootISOImageName := nutanixtypes.GenerateBootISOImageName(o.InfraID)
+	rhcosImageName := nutanixtypes.GenerateRhcosISOImageName(o.InfraID)
+	imagesToDelete := []string{
+		bootISOImageName,
+		rhcosImageName,
+	}
 	o.Logger.Infof("Starting deletion of Nutanix infrastructure for Openshift cluster %s", o.InfraID)
 	clientV3 := o.V3Client.V3
 	//Delete VMs
@@ -71,7 +76,7 @@ func (o *ClusterUninstaller) Run() (*installertypes.ClusterQuota, error) {
 
 	//Delete image
 	//TODO: cleanup rhcos image
-	err = cleanupImages(clientV3, ec, o, bootISOImageName)
+	err = cleanupImages(clientV3, ec, o, imagesToDelete)
 	if err != nil {
 		return nil, err
 	}
@@ -116,29 +121,37 @@ func cleanupVMs(clientV3 nutanixClientV3.Service, ec *ExpectedCategory, o *Clust
 	return nil
 }
 
-func cleanupImages(clientV3 nutanixClientV3.Service, ec *ExpectedCategory, o *ClusterUninstaller, expectedImageName string) error {
+func cleanupImages(clientV3 nutanixClientV3.Service, ec *ExpectedCategory, o *ClusterUninstaller, expectedImageNames []string) error {
+	var found bool
 	allImagesRaw, err := clientV3.ListAllImage(EmptyFilter)
 	if err != nil {
 		return err
 	}
 	allImages := allImagesRaw.Entities
-	for _, i := range allImages {
-		imageName := *i.Spec.Name
-		imageUUID := *i.Metadata.UUID
-		if imageName == expectedImageName {
-			if hasCategoryAssigned(i.Metadata, ec, o.Logger) {
-				if i.Spec.Description != nil {
-					if *i.Spec.Description == Description {
-						o.Logger.Infof("Deleting image %s with UUID %s", imageName, imageUUID)
-						response, err := clientV3.DeleteImage(imageUUID)
-						if err != nil {
-							return err
+	for _, expectedImageName := range expectedImageNames {
+		found = false
+		for _, i := range allImages {
+			imageName := *i.Spec.Name
+			imageUUID := *i.Metadata.UUID
+			if imageName == expectedImageName {
+				if hasCategoryAssigned(i.Metadata, ec, o.Logger) {
+					if i.Spec.Description != nil {
+						if *i.Spec.Description == Description {
+							found = true
+							o.Logger.Infof("Deleting image %s with UUID %s", imageName, imageUUID)
+							response, err := clientV3.DeleteImage(imageUUID)
+							if err != nil {
+								return err
+							}
+							nutanixtypes.WaitForTask(clientV3, response.Status.ExecutionContext.TaskUUID.(string))
+							break
 						}
-						nutanixtypes.WaitForTask(clientV3, response.Status.ExecutionContext.TaskUUID.(string))
-						break
 					}
 				}
 			}
+		}
+		if !found {
+			o.Logger.Infof("No image with name %s was found", expectedImageName)
 		}
 	}
 	return nil

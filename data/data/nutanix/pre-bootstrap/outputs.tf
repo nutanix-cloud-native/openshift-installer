@@ -1,19 +1,11 @@
 
-output "nutanix_prism_element_id" {
-  value = data.nutanix_cluster.prism_element.id
-}
-
 output "image_id" {
-  value = nutanix_image.rhcos.id
-  # value = data.nutanix_image.rhcos.id
+  # value = nutanix_image.rhcos.id
+  value = data.nutanix_image.rhcos.id
 }
 
 output "bootstrap_ignition_image_id" {
   value = nutanix_image.bootstrap_ignition.id
-}
-
-output "subnet_id" {
-  value = data.nutanix_subnet.subnet.id
 }
 
 output "cluster_domain" {

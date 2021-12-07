@@ -53,7 +53,10 @@ type OvirtCredsSecretData struct {
 
 // NutanixCredsSecretData holds encoded credentials and is used to generated cloud-creds secret
 type NutanixCredsSecretData struct {
-	Base64encodeKey      string
+	Base64encodeNutanixEndpoint string
+	Base64encodeNutanixPort     string
+	Base64encodeNutanixUsername string
+	Base64encodeNutanixPassword string
 }
 
 type cloudCredsSecretData struct {
@@ -64,7 +67,7 @@ type cloudCredsSecretData struct {
 	OpenStack *OpenStackCredsSecretData
 	VSphere   *VSphereCredsSecretData
 	Ovirt     *OvirtCredsSecretData
-	Nutanix	  *NutanixCredsSecretData
+	Nutanix   *NutanixCredsSecretData
 }
 
 type bootkubeTemplateData struct {

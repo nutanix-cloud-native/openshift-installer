@@ -71,12 +71,12 @@ func provider(clusterID string, platform *nutanix.Platform, mpool *nutanix.Machi
 		UserDataSecret:       &corev1.LocalObjectReference{Name: userDataSecret},
 		CredentialsSecret:    &corev1.LocalObjectReference{Name: "nutanix-credentials"},
 		ImageName:            osImage,
-		SubnetUUID:           platform.Subnet,
+		SubnetUUID:           platform.SubnetUUID,
 		NumVcpusPerSocket:    mpool.NumCoresPerSocket,
 		NumSockets:           mpool.NumCPUs,
 		MemorySizeMib:        mpool.MemoryMiB,
 		PowerState:           "ON",
-		ClusterReferenceUuid: platform.PrismElement,
+		ClusterReferenceUuid: platform.PrismElementUUID,
 		DiskSizeMib:          mpool.OSDisk.DiskSizeMib,
 	}, nil
 }

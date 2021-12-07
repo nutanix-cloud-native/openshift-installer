@@ -510,7 +510,7 @@ func (w *Worker) Generate(dependencies asset.Parents) error {
 			mpool.Set(ic.Platform.Nutanix.DefaultMachinePlatform)
 			mpool.Set(pool.Platform.Nutanix)
 			pool.Platform.Nutanix = &mpool
-			imageName := clusterID.InfraID + "-rhcos"
+			imageName := nutanixtypes.GenerateRhcosISOImageName(clusterID.InfraID)
 
 			sets, err := nutanix.MachineSets(clusterID.InfraID, ic, &pool, imageName, "worker", "worker-user-data")
 			if err != nil {

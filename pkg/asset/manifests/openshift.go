@@ -7,8 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"fmt"
-	
+
 	"github.com/ghodss/yaml"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
@@ -32,10 +31,10 @@ import (
 	baremetaltypes "github.com/openshift/installer/pkg/types/baremetal"
 	gcptypes "github.com/openshift/installer/pkg/types/gcp"
 	ibmcloudtypes "github.com/openshift/installer/pkg/types/ibmcloud"
+	nutanixtypes "github.com/openshift/installer/pkg/types/nutanix"
 	openstacktypes "github.com/openshift/installer/pkg/types/openstack"
 	ovirttypes "github.com/openshift/installer/pkg/types/ovirt"
 	vspheretypes "github.com/openshift/installer/pkg/types/vsphere"
-	nutanixtypes "github.com/openshift/installer/pkg/types/nutanix"
 )
 
 const (
@@ -214,10 +213,12 @@ func (o *Openshift) Generate(dependencies asset.Parents) error {
 			},
 		}
 	case nutanixtypes.Name:
-		secretString := fmt.Sprintf("%s:%s:%s:%s", installConfig.Config.Nutanix.PrismCentral, installConfig.Config.Nutanix.Port, installConfig.Config.Nutanix.Username, installConfig.Config.Nutanix.Password)
 		cloudCreds = cloudCredsSecretData{
 			Nutanix: &NutanixCredsSecretData{
-				Base64encodeKey: base64.StdEncoding.EncodeToString([]byte(secretString)),
+				Base64encodeNutanixEndpoint: base64.StdEncoding.EncodeToString([]byte(installConfig.Config.Nutanix.PrismCentral)),
+				Base64encodeNutanixPort:     base64.StdEncoding.EncodeToString([]byte(installConfig.Config.Nutanix.Port)),
+				Base64encodeNutanixUsername: base64.StdEncoding.EncodeToString([]byte(installConfig.Config.Nutanix.Username)),
+				Base64encodeNutanixPassword: base64.StdEncoding.EncodeToString([]byte(installConfig.Config.Nutanix.Password)),
 			},
 		}
 	}

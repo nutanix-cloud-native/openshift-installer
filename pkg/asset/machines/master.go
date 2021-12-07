@@ -432,7 +432,7 @@ func (m *Master) Generate(dependencies asset.Parents) error {
 		mpool.Set(ic.Platform.Nutanix.DefaultMachinePlatform)
 		mpool.Set(pool.Platform.Nutanix)
 		pool.Platform.Nutanix = &mpool
-		templateName := clusterID.InfraID + "-rhcos"
+		templateName := nutanixtypes.GenerateRhcosISOImageName(clusterID.InfraID)
 
 		machines, err = nutanix.Machines(clusterID.InfraID, ic, &pool, templateName, "master", "master-user-data")
 		if err != nil {

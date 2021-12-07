@@ -797,7 +797,6 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
 				Port:                  installConfig.Config.Nutanix.Port,
 				Username:              installConfig.Config.Nutanix.Username,
 				Password:              installConfig.Config.Nutanix.Password,
-				PrismElement:          installConfig.Config.Nutanix.PrismElement,
 				ImageURL:              string(*rhcosImage),
 				BootstrapIgnitionData: bootstrapIgn,
 				ClusterID:             clusterID.InfraID,

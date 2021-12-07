@@ -1,12 +1,3 @@
-
-variable "subnet_id" {
-  type = string
-}
-
-variable "nutanix_prism_element_id" {
-  type = string
-}
-
 variable "image_id" {
   type = string
 }

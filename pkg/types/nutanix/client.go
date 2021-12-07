@@ -55,7 +55,10 @@ func CreateNutanixClient(ctx context.Context, prismCentral, port, username, pass
 
 func GenerateBootISOImageName(infraID string) string {
 	return fmt.Sprintf("%s-%s", infraID, ISOFile)
+}
 
+func GenerateRhcosISOImageName(infraID string) string {
+	return fmt.Sprintf("%s-rhcos", infraID)
 }
 
 func CreateBootstrapISO(infraID, userData string) (string, error) {

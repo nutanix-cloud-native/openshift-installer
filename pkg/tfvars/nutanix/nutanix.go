@@ -19,9 +19,9 @@ type config struct {
 	DiskSizeMib            int64  `json:"nutanix_control_plane_disk_mib"`
 	NumCPUs                int64  `json:"nutanix_control_plane_num_cpus"`
 	NumCoresPerSocket      int64  `json:"nutanix_control_plane_cores_per_socket"`
-	PrismElement           string `json:"nutanix_prism_element"`
+	PrismElementUUID       string `json:"nutanix_prism_element_uuid"`
 	Insecure               bool   `json:"insecure"`
-	Subnet                 string `json:"nutanix_subnet"`
+	SubnetUUID             string `json:"nutanix_subnet_uuid"`
 	Image                  string `json:"nutanix_image"`
 	ImageFilePath          string `json:"nutanix_image_filepath"`
 	BootstrapIgnitionImage string `json:"nutanix_bootstrap_ignition_image"`
@@ -33,7 +33,6 @@ type TFVarsSources struct {
 	Port                  string
 	Username              string
 	Password              string
-	PrismElement          string
 	ImageURL              string
 	Insecure              bool
 	BootstrapIgnitionData string
@@ -62,8 +61,8 @@ func TFVars(sources TFVarsSources) ([]byte, error) {
 		DiskSizeMib:            controlPlaneConfig.DiskSizeMib,
 		NumCPUs:                controlPlaneConfig.NumSockets,
 		NumCoresPerSocket:      controlPlaneConfig.NumVcpusPerSocket,
-		PrismElement:           sources.PrismElement,
-		Subnet:                 controlPlaneConfig.SubnetUUID,
+		PrismElementUUID:       controlPlaneConfig.ClusterReferenceUuid,
+		SubnetUUID:             controlPlaneConfig.SubnetUUID,
 		Image:                  controlPlaneConfig.ImageName,
 		ImageFilePath:          cachedImage,
 		BootstrapIgnitionImage: bootstrapIgnitionImage,

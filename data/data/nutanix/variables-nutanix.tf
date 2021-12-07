@@ -29,9 +29,9 @@ variable "password" {
   description = "Prism Central server password"
 }
 
-variable "nutanix_prism_element" {
+variable "nutanix_prism_element_uuid" {
   type        = string
-  description = "This is the name of the Prism Element cluster."
+  description = "This is the uuid of the Prism Element cluster."
 }
 
 
@@ -45,9 +45,9 @@ variable "nutanix_image" {
   description = "This is the name to the image that will be imported into Prism Central."
 }
 
-variable "nutanix_subnet" {
+variable "nutanix_subnet_uuid" {
   type        = string
-  description = "This is the name of the publicly accessible subnet for cluster ingress and access."
+  description = "This is the uuid of the publicly accessible subnet for cluster ingress and access."
 }
 
 variable "nutanix_bootstrap_ignition_image" {
