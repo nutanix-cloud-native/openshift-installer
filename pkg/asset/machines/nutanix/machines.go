@@ -77,6 +77,7 @@ func provider(clusterID string, platform *nutanix.Platform, mpool *nutanix.Machi
 		MemorySizeMib:        mpool.MemoryMiB,
 		PowerState:           "ON",
 		ClusterReferenceUuid: platform.PrismElement,
+		DiskSizeMib:          mpool.OSDisk.DiskSizeMib,
 	}, nil
 }
 
