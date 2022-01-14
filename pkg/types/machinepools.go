@@ -8,6 +8,7 @@ import (
 	"github.com/openshift/installer/pkg/types/gcp"
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/libvirt"
+	"github.com/openshift/installer/pkg/types/nutanix"
 	"github.com/openshift/installer/pkg/types/openstack"
 	"github.com/openshift/installer/pkg/types/ovirt"
 	"github.com/openshift/installer/pkg/types/vsphere"
@@ -100,6 +101,9 @@ type MachinePoolPlatform struct {
 
 	// Ovirt is the configuration used when installing on oVirt.
 	Ovirt *ovirt.MachinePool `json:"ovirt,omitempty"`
+
+	// Nutanix is the configuration used when installing on Nutanix.
+	Nutanix *nutanix.MachinePool `json:"nutanix,omitempty"`
 }
 
 // Name returns a string representation of the platform (e.g. "aws" if
@@ -129,6 +133,8 @@ func (p *MachinePoolPlatform) Name() string {
 		return vsphere.Name
 	case p.Ovirt != nil:
 		return ovirt.Name
+	case p.Nutanix != nil:
+		return nutanix.Name
 	default:
 		return ""
 	}

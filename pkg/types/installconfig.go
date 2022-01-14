@@ -38,6 +38,7 @@ var (
 		azure.Name,
 		gcp.Name,
 		ibmcloud.Name,
+		nutanix.Name,
 		openstack.Name,
 		ovirt.Name,
 		vsphere.Name,
