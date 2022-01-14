@@ -18,7 +18,7 @@ type Platform struct {
 	Password string `json:"password"`
 
 	// PrismElement is the name of the Prism Element cluster to use in the Prism Central.
-	PrismElement string `json:"prismElement"`
+	PrismElementUUID string `json:"prismElementUuid"`
 
 	// DefaultStorageContainer is the default datastore to use for provisioning volumes.
 	// DefaultStorageContainer string `json:"defaultStorageContainer"`
@@ -39,11 +39,12 @@ type Platform struct {
 	IngressVIP string `json:"ingressVIP,omitempty"`
 
 	// DefaultMachinePlatform is the default configuration used when
-	// installing on VSphere for machine pools which do not define their own
+	// installing on Nutanix for machine pools which do not define their own
 	// platform configuration.
 	// +optional
 	DefaultMachinePlatform *MachinePool `json:"defaultMachinePlatform,omitempty"`
 
 	// Network specifies the name of the network to be used by the cluster.
-	Subnet string `json:"subnet,omitempty"`
+	SubnetUUID string `json:"subnetUuid,omitempty"`
 }
+
