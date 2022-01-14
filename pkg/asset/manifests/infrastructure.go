@@ -21,6 +21,7 @@ import (
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/libvirt"
 	"github.com/openshift/installer/pkg/types/none"
+	"github.com/openshift/installer/pkg/types/nutanix"
 	"github.com/openshift/installer/pkg/types/openstack"
 	"github.com/openshift/installer/pkg/types/ovirt"
 	"github.com/openshift/installer/pkg/types/vsphere"
@@ -210,6 +211,14 @@ func (i *Infrastructure) Generate(dependencies asset.Parents) error {
 		config.Status.PlatformStatus.Ovirt = &configv1.OvirtPlatformStatus{
 			APIServerInternalIP: installConfig.Config.Ovirt.APIVIP,
 			IngressIP:           installConfig.Config.Ovirt.IngressVIP,
+		}
+	case nutanix.Name:
+		config.Spec.PlatformSpec.Type = configv1.NutanixPlatformType
+		if installConfig.Config.Nutanix.APIVIP != "" {
+			config.Status.PlatformStatus.Nutanix = &configv1.NutanixPlatformStatus{
+				APIServerInternalIP: installConfig.Config.Nutanix.APIVIP,
+				IngressIP:           installConfig.Config.Nutanix.IngressVIP,
+			}
 		}
 	default:
 		config.Spec.PlatformSpec.Type = configv1.NonePlatformType
