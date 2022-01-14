@@ -16,7 +16,7 @@ func ValidatePlatform(p *nutanix.Platform, fldPath *field.Path) field.ErrorList 
 	if len(p.PrismCentral) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("prismCentral"), "must specify the Prism Central"))
 	}
-	if len(p.PrismElement) == 0 {
+	if len(p.PrismElementUUID) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("prismElement"), "must specify the Prism Element"))
 	}
 	if len(p.Username) == 0 {
@@ -28,7 +28,7 @@ func ValidatePlatform(p *nutanix.Platform, fldPath *field.Path) field.ErrorList 
 	if len(p.Port) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("port"), "must specify the port"))
 	}
-	if len(p.Subnet) == 0 {
+	if len(p.SubnetUUID) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("subnet"), "must specify the subnet"))
 	}
 	if len(p.PrismCentral) != 0 {
@@ -49,11 +49,11 @@ func ValidatePlatform(p *nutanix.Platform, fldPath *field.Path) field.ErrorList 
 func ValidateForProvisioning(p *nutanix.Platform, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
-	if len(p.PrismElement) == 0 {
+	if len(p.PrismElementUUID) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("prismElements"), "must specify the cluster"))
 	}
 
-	if len(p.Subnet) == 0 {
+	if len(p.SubnetUUID) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("subnet"), "must specify the subnet"))
 	}
 
