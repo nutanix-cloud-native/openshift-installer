@@ -12,6 +12,7 @@ import (
 	ibmclouddefaults "github.com/openshift/installer/pkg/types/ibmcloud/defaults"
 	libvirtdefaults "github.com/openshift/installer/pkg/types/libvirt/defaults"
 	nonedefaults "github.com/openshift/installer/pkg/types/none/defaults"
+	nutanixdefaults "github.com/openshift/installer/pkg/types/nutanix/defaults"
 	openstackdefaults "github.com/openshift/installer/pkg/types/openstack/defaults"
 	ovirtdefaults "github.com/openshift/installer/pkg/types/ovirt/defaults"
 	vspheredefaults "github.com/openshift/installer/pkg/types/vsphere/defaults"
@@ -107,5 +108,8 @@ func SetInstallConfigDefaults(c *types.InstallConfig) {
 		}
 	case c.Platform.None != nil:
 		nonedefaults.SetPlatformDefaults(c.Platform.None)
+	case c.Platform.Nutanix != nil:
+		nutanixdefaults.SetPlatformDefaults(c.Platform.Nutanix, c)
 	}
+
 }
