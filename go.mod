@@ -400,6 +400,7 @@ replace (
 	github.com/hashicorp/go-getter => github.com/hashicorp/go-getter v1.5.2
 	github.com/hashicorp/go-plugin => github.com/hashicorp/go-plugin v1.3.0
 	github.com/hashicorp/terraform-plugin-test/v2 => github.com/hashicorp/terraform-plugin-test/v2 v2.2.0
+	github.com/openshift/api => github.com/yannickstruyf3/api v0.0.0-20211116212905-775f773bafe0
 	github.com/ulikunitz/xz => github.com/ulikunitz/xz v0.5.7
 	google.golang.org/api => google.golang.org/api v0.33.0
 	google.golang.org/genproto => google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
