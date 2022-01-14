@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/ghodss/yaml"
+	nutanixapi "github.com/nutanix-cloud-native/machine-api-provider-nutanix/pkg/apis"
+	nutanixprovider "github.com/nutanix-cloud-native/machine-api-provider-nutanix/pkg/apis/nutanixprovider/v1beta1"
 	machineapi "github.com/openshift/api/machine/v1beta1"
 	alibabacloudapi "github.com/openshift/cluster-api-provider-alibaba/pkg/apis"
 	alibabacloudprovider "github.com/openshift/cluster-api-provider-alibaba/pkg/apis/alibabacloudprovider/v1beta1"
@@ -19,6 +21,9 @@ import (
 	libvirtprovider "github.com/openshift/cluster-api-provider-libvirt/pkg/apis/libvirtproviderconfig/v1beta1"
 	ovirtproviderapi "github.com/openshift/cluster-api-provider-ovirt/pkg/apis"
 	ovirtprovider "github.com/openshift/cluster-api-provider-ovirt/pkg/apis/ovirtprovider/v1beta1"
+	"github.com/openshift/installer/pkg/asset/machines/nutanix"
+	nonetypes "github.com/openshift/installer/pkg/types/none"
+	nutanixtypes "github.com/openshift/installer/pkg/types/nutanix"
 	mcfgv1 "github.com/openshift/machine-config-operator/pkg/apis/machineconfiguration.openshift.io/v1"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -55,7 +60,6 @@ import (
 	gcptypes "github.com/openshift/installer/pkg/types/gcp"
 	ibmcloudtypes "github.com/openshift/installer/pkg/types/ibmcloud"
 	libvirttypes "github.com/openshift/installer/pkg/types/libvirt"
-	nonetypes "github.com/openshift/installer/pkg/types/none"
 	openstacktypes "github.com/openshift/installer/pkg/types/openstack"
 	ovirttypes "github.com/openshift/installer/pkg/types/ovirt"
 	vspheretypes "github.com/openshift/installer/pkg/types/vsphere"
@@ -155,6 +159,17 @@ func defaultVSphereMachinePoolPlatform() vspheretypes.MachinePool {
 		MemoryMiB:         8192,
 		OSDisk: vspheretypes.OSDisk{
 			DiskSizeGB: decimalRootVolumeSize,
+		},
+	}
+}
+
+func defaultNutanixMachinePoolPlatform() nutanixtypes.MachinePool {
+	return nutanixtypes.MachinePool{
+		NumCPUs:           2,
+		NumCoresPerSocket: 2,
+		MemoryMiB:         8192,
+		OSDisk: nutanixtypes.OSDisk{
+			DiskSizeMib: 120 * 1024,
 		},
 	}
 }
@@ -489,6 +504,20 @@ func (w *Worker) Generate(dependencies asset.Parents) error {
 				machineSets = append(machineSets, set)
 			}
 		case nonetypes.Name:
+		case nutanixtypes.Name:
+			mpool := defaultNutanixMachinePoolPlatform()
+			mpool.Set(ic.Platform.Nutanix.DefaultMachinePlatform)
+			mpool.Set(pool.Platform.Nutanix)
+			pool.Platform.Nutanix = &mpool
+			imageName := nutanixtypes.RHCOSImageName(clusterID.InfraID)
+
+			sets, err := nutanix.MachineSets(clusterID.InfraID, ic, &pool, imageName, "worker", workerUserDataSecretName)
+			if err != nil {
+				return errors.Wrap(err, "failed to create worker machine objects")
+			}
+			for _, set := range sets {
+				machineSets = append(machineSets, set)
+			}
 		default:
 			return fmt.Errorf("invalid Platform")
 		}
@@ -567,6 +596,7 @@ func (w *Worker) MachineSets() ([]machineapi.MachineSet, error) {
 	alibabacloudapi.AddToScheme(scheme)
 	awsapi.AddToScheme(scheme)
 	baremetalapi.AddToScheme(scheme)
+	nutanixapi.AddToScheme(scheme)
 	ibmcloudapi.AddToScheme(scheme)
 	libvirtapi.AddToScheme(scheme)
 	openstackapi.AddToScheme(scheme)
@@ -583,6 +613,7 @@ func (w *Worker) MachineSets() ([]machineapi.MachineSet, error) {
 		baremetalprovider.SchemeGroupVersion,
 		ibmcloudprovider.SchemeGroupVersion,
 		libvirtprovider.SchemeGroupVersion,
+		nutanixprovider.SchemeGroupVersion,
 		openstackprovider.SchemeGroupVersion,
 		ovirtprovider.SchemeGroupVersion,
 		machineapi.SchemeGroupVersion,

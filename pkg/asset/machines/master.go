@@ -9,6 +9,8 @@ import (
 
 	"github.com/ghodss/yaml"
 	baremetalhost "github.com/metal3-io/baremetal-operator/apis/metal3.io/v1alpha1"
+	nutanixapi "github.com/nutanix-cloud-native/machine-api-provider-nutanix/pkg/apis"
+	nutanixprovider "github.com/nutanix-cloud-native/machine-api-provider-nutanix/pkg/apis/nutanixprovider/v1beta1"
 	machineapi "github.com/openshift/api/machine/v1beta1"
 	alibabacloudapi "github.com/openshift/cluster-api-provider-alibaba/pkg/apis"
 	alibabacloudprovider "github.com/openshift/cluster-api-provider-alibaba/pkg/apis/alibabacloudprovider/v1beta1"
@@ -42,6 +44,7 @@ import (
 	"github.com/openshift/installer/pkg/asset/machines/ibmcloud"
 	"github.com/openshift/installer/pkg/asset/machines/libvirt"
 	"github.com/openshift/installer/pkg/asset/machines/machineconfig"
+	"github.com/openshift/installer/pkg/asset/machines/nutanix"
 	"github.com/openshift/installer/pkg/asset/machines/openstack"
 	"github.com/openshift/installer/pkg/asset/machines/ovirt"
 	"github.com/openshift/installer/pkg/asset/machines/vsphere"
@@ -58,6 +61,7 @@ import (
 	ibmcloudtypes "github.com/openshift/installer/pkg/types/ibmcloud"
 	libvirttypes "github.com/openshift/installer/pkg/types/libvirt"
 	nonetypes "github.com/openshift/installer/pkg/types/none"
+	nutanixtypes "github.com/openshift/installer/pkg/types/nutanix"
 	openstacktypes "github.com/openshift/installer/pkg/types/openstack"
 	ovirttypes "github.com/openshift/installer/pkg/types/ovirt"
 	vspheretypes "github.com/openshift/installer/pkg/types/vsphere"
@@ -419,6 +423,21 @@ func (m *Master) Generate(dependencies asset.Parents) error {
 		}
 		vsphere.ConfigMasters(machines, clusterID.InfraID)
 	case nonetypes.Name:
+	case nutanixtypes.Name:
+		mpool := defaultNutanixMachinePoolPlatform()
+		mpool.NumCPUs = 4
+		mpool.NumCoresPerSocket = 4
+		mpool.MemoryMiB = 16384
+		mpool.Set(ic.Platform.Nutanix.DefaultMachinePlatform)
+		mpool.Set(pool.Platform.Nutanix)
+		pool.Platform.Nutanix = &mpool
+		templateName := nutanixtypes.RHCOSImageName(clusterID.InfraID)
+
+		machines, err = nutanix.Machines(clusterID.InfraID, ic, &pool, templateName, "master", masterUserDataSecretName)
+		if err != nil {
+			return errors.Wrap(err, "failed to create master machine objects")
+		}
+		nutanix.ConfigMasters(machines, clusterID.InfraID)
 	default:
 		return fmt.Errorf("invalid Platform")
 	}
@@ -558,6 +577,7 @@ func (m *Master) Machines() ([]machineapi.Machine, error) {
 		&machineapi.GCPMachineProviderSpec{},
 	)
 	machineapi.AddToScheme(scheme)
+	nutanixapi.AddToScheme(scheme)
 	decoder := serializer.NewCodecFactory(scheme).UniversalDecoder(
 		alibabacloudprovider.SchemeGroupVersion,
 		awsprovider.SchemeGroupVersion,
@@ -567,6 +587,7 @@ func (m *Master) Machines() ([]machineapi.Machine, error) {
 		openstackprovider.SchemeGroupVersion,
 		machineapi.SchemeGroupVersion,
 		ovirtprovider.SchemeGroupVersion,
+		nutanixprovider.SchemeGroupVersion,
 	)
 
 	machines := []machineapi.Machine{}

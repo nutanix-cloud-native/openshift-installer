@@ -135,3 +135,7 @@ func getTaskStatus(clientV3 nutanixClientV3.Service, taskUUID string) (string, e
 	}
 	return *v.Status, nil
 }
+
+func RHCOSImageName(infraID string) string {
+	return fmt.Sprintf("%s-rhcos", infraID)
+}
