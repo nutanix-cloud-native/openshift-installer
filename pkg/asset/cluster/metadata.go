@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"encoding/json"
+	nutanixtypes "github.com/openshift/installer/pkg/types/nutanix"
 	"io/ioutil"
 	"path/filepath"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/openshift/installer/pkg/asset/cluster/gcp"
 	"github.com/openshift/installer/pkg/asset/cluster/ibmcloud"
 	"github.com/openshift/installer/pkg/asset/cluster/libvirt"
+	"github.com/openshift/installer/pkg/asset/cluster/nutanix"
 	"github.com/openshift/installer/pkg/asset/cluster/openstack"
 	"github.com/openshift/installer/pkg/asset/cluster/ovirt"
 	"github.com/openshift/installer/pkg/asset/cluster/vsphere"
@@ -94,6 +96,8 @@ func (m *Metadata) Generate(parents asset.Parents) (err error) {
 	case alibabacloudtypes.Name:
 		metadata.ClusterPlatformMetadata.AlibabaCloud = alibabacloud.Metadata(installConfig.Config)
 	case nonetypes.Name:
+	case nutanixtypes.Name:
+		metadata.ClusterPlatformMetadata.Nutanix = nutanix.Metadata(installConfig.Config)
 	default:
 		return errors.Errorf("no known platform")
 	}
