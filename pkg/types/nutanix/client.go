@@ -24,3 +24,4 @@ func CreateNutanixClient(ctx context.Context, prismCentral, port, username, pass
 
 	return nutanixclientv3.NewV3Client(cred)
 }
+
