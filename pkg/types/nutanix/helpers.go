@@ -136,7 +136,7 @@ func getTaskStatus(clientV3 nutanixClientV3.Service, taskUUID string) (string, e
 	return *v.Status, nil
 }
 
-// RHCOSImageName is the unique image name for a given cluster
+// RHCOSImageName generates a unique name for a given infraID
 func RHCOSImageName(infraID string) string {
 	return fmt.Sprintf("%s-rhcos", infraID)
 }

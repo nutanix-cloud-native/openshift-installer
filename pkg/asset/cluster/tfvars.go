@@ -17,6 +17,7 @@ import (
 	"github.com/sirupsen/logrus"
 	awsprovider "sigs.k8s.io/cluster-api-provider-aws/pkg/apis/awsprovider/v1beta1"
 
+	nutanixprovider "github.com/openshift/machine-api-provider-nutanix/pkg/apis/nutanixprovider/v1beta1"
 	configv1 "github.com/openshift/api/config/v1"
 	machinev1 "github.com/openshift/api/machine/v1"
 	machinev1beta1 "github.com/openshift/api/machine/v1beta1"
@@ -42,6 +43,7 @@ import (
 	gcptfvars "github.com/openshift/installer/pkg/tfvars/gcp"
 	ibmcloudtfvars "github.com/openshift/installer/pkg/tfvars/ibmcloud"
 	libvirttfvars "github.com/openshift/installer/pkg/tfvars/libvirt"
+	nutanixtfvars "github.com/openshift/installer/pkg/tfvars/nutanix"
 	openstacktfvars "github.com/openshift/installer/pkg/tfvars/openstack"
 	ovirttfvars "github.com/openshift/installer/pkg/tfvars/ovirt"
 	vspheretfvars "github.com/openshift/installer/pkg/tfvars/vsphere"
@@ -54,6 +56,7 @@ import (
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/libvirt"
 	"github.com/openshift/installer/pkg/types/none"
+	"github.com/openshift/installer/pkg/types/nutanix"
 	"github.com/openshift/installer/pkg/types/openstack"
 	"github.com/openshift/installer/pkg/types/ovirt"
 	"github.com/openshift/installer/pkg/types/vsphere"
@@ -770,6 +773,38 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
 		}
 		t.FileList = append(t.FileList, &asset.File{
 			Filename: TfPlatformVarsFileName,
+			Data:     data,
+		})
+	case nutanix.Name:
+		if rhcosImage == nil {
+			return errors.New("Unable to retrieve rhcos image")
+		}
+		controlPlanes, err := mastersAsset.Machines()
+		if err != nil {
+			return errors.Wrapf(err, "error getting control plane machines")
+		}
+		controlPlaneConfigs := make([]*nutanixprovider.NutanixMachineProviderConfig, len(controlPlanes))
+		for i, c := range controlPlanes {
+			controlPlaneConfigs[i] = c.Spec.ProviderSpec.Value.Object.(*nutanixprovider.NutanixMachineProviderConfig)
+		}
+
+		data, err = nutanixtfvars.TFVars(
+			nutanixtfvars.TFVarsSources{
+				PrismCentral:          installConfig.Config.Nutanix.PrismCentral,
+				Port:                  installConfig.Config.Nutanix.Port,
+				Username:              installConfig.Config.Nutanix.Username,
+				Password:              installConfig.Config.Nutanix.Password,
+				ImageURL:              string(*rhcosImage),
+				BootstrapIgnitionData: bootstrapIgn,
+				ClusterID:             clusterID.InfraID,
+				ControlPlaneConfigs:   controlPlaneConfigs,
+			},
+		)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get %s Terraform variables", platform)
+		}
+		t.FileList = append(t.FileList, &asset.File{
+			Filename: fmt.Sprintf(TfPlatformVarsFileName, platform),
 			Data:     data,
 		})
 	default:
