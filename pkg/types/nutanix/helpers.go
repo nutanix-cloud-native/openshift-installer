@@ -31,7 +31,7 @@ func bootISOImageName(infraID string) string {
 	return fmt.Sprintf("%s-%s", infraID, isoFile)
 }
 
-func createBootstrapISO(infraID, userData string) (string, error) {
+func CreateBootstrapISO(infraID, userData string) (string, error) {
 	id := uuid.New()
 	metaObj := &MetadataCloudInit{
 		UUID: id.String(),
