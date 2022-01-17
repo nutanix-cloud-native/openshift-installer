@@ -1532,6 +1532,9 @@ github.com/kardianos/osext
 # github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 ## explicit
 github.com/kballard/go-shellquote
+# github.com/kdomanski/iso9660 v0.2.1
+## explicit; go 1.14
+github.com/kdomanski/iso9660
 # github.com/keybase/go-crypto v0.0.0-20200123153347-de78d2cb44f4
 ## explicit
 github.com/keybase/go-crypto/brainpool
@@ -2247,6 +2250,11 @@ github.com/terraform-providers/terraform-provider-ignition/v2/ignition
 # github.com/terraform-providers/terraform-provider-local v1.4.0
 ## explicit
 github.com/terraform-providers/terraform-provider-local/local
+# github.com/terraform-providers/terraform-provider-nutanix v1.1.0 => github.com/nutanix/terraform-provider-nutanix v1.2.2-0.20211029075448-e21f85ac2cf7
+## explicit; go 1.13
+github.com/terraform-providers/terraform-provider-nutanix/client
+github.com/terraform-providers/terraform-provider-nutanix/client/v3
+github.com/terraform-providers/terraform-provider-nutanix/utils
 # github.com/terraform-providers/terraform-provider-random v1.3.2-0.20190925210718-83518d96ae4f
 ## explicit
 github.com/terraform-providers/terraform-provider-random/random
@@ -3158,6 +3166,7 @@ sigs.k8s.io/yaml
 # github.com/terraform-providers/terraform-provider-ignition/v2 => github.com/community-terraform-providers/terraform-provider-ignition/v2 v2.1.0
 # k8s.io/client-go => k8s.io/client-go v0.23.0
 # k8s.io/kubectl => k8s.io/kubectl v0.23.0
+# github.com/terraform-providers/terraform-provider-nutanix => github.com/nutanix/terraform-provider-nutanix v1.2.2-0.20211029075448-e21f85ac2cf7
 # sigs.k8s.io/cluster-api-provider-aws => github.com/openshift/cluster-api-provider-aws v0.2.1-0.20210121023454-5ffc5f422a80
 # sigs.k8s.io/cluster-api-provider-azure => github.com/openshift/cluster-api-provider-azure v0.1.0-alpha.3.0.20210626224711-5d94c794092f
 # sigs.k8s.io/cluster-api-provider-openstack => github.com/openshift/cluster-api-provider-openstack v0.0.0-20211111204942-611d320170af
