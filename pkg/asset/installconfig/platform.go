@@ -16,6 +16,7 @@ import (
 	gcpconfig "github.com/openshift/installer/pkg/asset/installconfig/gcp"
 	ibmcloudconfig "github.com/openshift/installer/pkg/asset/installconfig/ibmcloud"
 	libvirtconfig "github.com/openshift/installer/pkg/asset/installconfig/libvirt"
+	nutanixconfig "github.com/openshift/installer/pkg/asset/installconfig/nutanix"
 	openstackconfig "github.com/openshift/installer/pkg/asset/installconfig/openstack"
 	ovirtconfig "github.com/openshift/installer/pkg/asset/installconfig/ovirt"
 	vsphereconfig "github.com/openshift/installer/pkg/asset/installconfig/vsphere"
@@ -28,6 +29,7 @@ import (
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/libvirt"
 	"github.com/openshift/installer/pkg/types/none"
+	"github.com/openshift/installer/pkg/types/nutanix"
 	"github.com/openshift/installer/pkg/types/openstack"
 	"github.com/openshift/installer/pkg/types/ovirt"
 	"github.com/openshift/installer/pkg/types/vsphere"
@@ -103,6 +105,11 @@ func (a *platform) Generate(asset.Parents) error {
 		}
 	case vsphere.Name:
 		a.VSphere, err = vsphereconfig.Platform()
+		if err != nil {
+			return err
+		}
+	case nutanix.Name:
+		a.Nutanix, err = nutanixconfig.Platform()
 		if err != nil {
 			return err
 		}

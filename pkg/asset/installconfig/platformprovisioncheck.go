@@ -11,6 +11,7 @@ import (
 	bmconfig "github.com/openshift/installer/pkg/asset/installconfig/baremetal"
 	gcpconfig "github.com/openshift/installer/pkg/asset/installconfig/gcp"
 	ibmcloudconfig "github.com/openshift/installer/pkg/asset/installconfig/ibmcloud"
+	nutanixconfig "github.com/openshift/installer/pkg/asset/installconfig/nutanix"
 	osconfig "github.com/openshift/installer/pkg/asset/installconfig/openstack"
 	ovirtconfig "github.com/openshift/installer/pkg/asset/installconfig/ovirt"
 	vsconfig "github.com/openshift/installer/pkg/asset/installconfig/vsphere"
@@ -22,6 +23,7 @@ import (
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/libvirt"
 	"github.com/openshift/installer/pkg/types/none"
+	"github.com/openshift/installer/pkg/types/nutanix"
 	"github.com/openshift/installer/pkg/types/openstack"
 	"github.com/openshift/installer/pkg/types/ovirt"
 	"github.com/openshift/installer/pkg/types/vsphere"
@@ -117,6 +119,11 @@ func (a *PlatformProvisionCheck) Generate(dependencies asset.Parents) error {
 		}
 	case libvirt.Name, none.Name:
 		// no special provisioning requirements to check
+	case nutanix.Name:
+		err = nutanixconfig.ValidateForProvisioning(ic.Config)
+		if err != nil {
+			return err
+		}
 	default:
 		err = fmt.Errorf("unknown platform type %q", platform)
 	}
