@@ -27,19 +27,20 @@ type metadataCloudInit struct {
 	UUID string `json:"uuid"`
 }
 
-func bootISOImageName(infraID string) string {
+
+func BootISOImageName(infraID string) string {
 	return fmt.Sprintf("%s-%s", infraID, isoFile)
 }
 
-func createBootstrapISO(infraID, userData string) (string, error) {
+func CreateBootstrapISO(infraID, userData string) (string, error) {
 	id := uuid.New()
 	metaObj := &metadataCloudInit{
 		UUID: id.String(),
 	}
-	fullISOFile := bootISOImageName(infraID)
+	fullISOFile := BootISOImageName(infraID)
 	metadata, err := json.Marshal(metaObj)
 	if err != nil {
-		return "", errors.Wrap(err, fmt.Sprintf("failed to marshal metadata struct to json"))
+		return "", errors.Wrap(err, fmt.Sprintf("failed marshal metadata struct to json"))
 	}
 	writer, err := iso9660.NewWriter()
 	if err != nil {
@@ -76,9 +77,9 @@ func createBootstrapISO(infraID, userData string) (string, error) {
 	return fullISOFile, nil
 }
 
-func waitForTasks(clientV3 nutanixClientV3.Service, taskUUIDs []string) error {
+func WaitForTasks(clientV3 nutanixClientV3.Service, taskUUIDs []string) error {
 	for _, t := range taskUUIDs {
-		err := waitForTask(clientV3, t)
+		err := WaitForTask(clientV3, t)
 		if err != nil {
 			return err
 		}
@@ -86,7 +87,7 @@ func waitForTasks(clientV3 nutanixClientV3.Service, taskUUIDs []string) error {
 	return nil
 }
 
-func waitForTask(clientV3 nutanixClientV3.Service, taskUUID string) error {
+func WaitForTask(clientV3 nutanixClientV3.Service, taskUUID string) error {
 	finished := false
 	var err error
 	for start := time.Now(); time.Since(start) < timeout; {
