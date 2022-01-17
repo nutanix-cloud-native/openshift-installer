@@ -8,6 +8,7 @@ import (
 	"github.com/openshift/installer/pkg/types/gcp"
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/libvirt"
+	"github.com/openshift/installer/pkg/types/nutanix"
 	"github.com/openshift/installer/pkg/types/openstack"
 	"github.com/openshift/installer/pkg/types/ovirt"
 	"github.com/openshift/installer/pkg/types/vsphere"
@@ -37,6 +38,7 @@ type ClusterPlatformMetadata struct {
 	BareMetal    *baremetal.Metadata    `json:"baremetal,omitempty"`
 	Ovirt        *ovirt.Metadata        `json:"ovirt,omitempty"`
 	VSphere      *vsphere.Metadata      `json:"vsphere,omitempty"`
+	Nutanix      *nutanix.Metadata      `json:"nutanix,omitempty"`
 }
 
 // Platform returns a string representation of the platform
@@ -75,6 +77,9 @@ func (cpm *ClusterPlatformMetadata) Platform() string {
 	}
 	if cpm.VSphere != nil {
 		return vsphere.Name
+	}
+	if cpm.Nutanix != nil {
+		return nutanix.Name
 	}
 	return ""
 }
