@@ -401,7 +401,7 @@ replace (
 	github.com/terraform-providers/terraform-provider-azurestack => github.com/openshift/terraform-provider-azurestack v0.10.0-openshift // Use OpenShift fork
 	github.com/terraform-providers/terraform-provider-google v1.20.1-0.20200623174414-27107f2ee160 => github.com/openshift/terraform-providers-terraform-provider-google v1.20.1-0.20211201190933-7b79c6d1afc8 // Pin to 3.27.0-openshift
 	github.com/terraform-providers/terraform-provider-ignition/v2 => github.com/community-terraform-providers/terraform-provider-ignition/v2 v2.1.0
-	github.com/terraform-providers/terraform-provider-nutanix => github.com/nutanix/terraform-provider-nutanix v1.2.1
+	github.com/terraform-providers/terraform-provider-nutanix => github.com/nutanix/terraform-provider-nutanix v1.2.2
 	k8s.io/client-go => k8s.io/client-go v0.22.0
 	k8s.io/kubectl => k8s.io/kubectl v0.21.0-rc.0
 	sigs.k8s.io/cluster-api-provider-aws => github.com/openshift/cluster-api-provider-aws v0.2.1-0.20210121023454-5ffc5f422a80

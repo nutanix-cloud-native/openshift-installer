@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/logutils"
@@ -104,6 +105,7 @@ func Destroy(datadir string, args []string, stdout, stderr io.Writer) int {
 
 // Init is wrapper around `terraform init` subcommand.
 func Init(datadir string, args []string, stdout, stderr io.Writer) int {
+	fmt.Printf("init %s %s\n", datadir, strings.Join(args, " "))
 	return runner("init", datadir, args, stdout, stderr)
 }
 
