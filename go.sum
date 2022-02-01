@@ -1475,6 +1475,8 @@ github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d h1:VhgPp6v9qf9Agr/
 github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d/go.mod h1:YUTz3bUH2ZwIWBy3CJBeOBEugqcmXREj14T+iG/4k4U=
 github.com/nutanix-cloud-native/machine-api-provider-nutanix v0.0.0-20220110164341-04b3ccda32f7 h1:fesaGchGw4s/RHVT1NDlqVLwdCJTf/WPcIr7UlwTmsg=
 github.com/nutanix-cloud-native/machine-api-provider-nutanix v0.0.0-20220110164341-04b3ccda32f7/go.mod h1:BnoehGhy9V6hOmHlBMix05hWsTlA4A8jq/T1bG/fs2k=
+github.com/nutanix/terraform-provider-nutanix v1.2.1 h1:iBzrhdbRQ+SKHwZe26NriMf9PdG+0carFwjRt7jfkq4=
+github.com/nutanix/terraform-provider-nutanix v1.2.1/go.mod h1:XNd4Ph1C07UCzVdGq9IJ98nsRLq4gQwmiZ2fJo6Vhlg=
 github.com/nutanix/terraform-provider-nutanix v1.2.2-0.20211029075448-e21f85ac2cf7 h1:XSW7lfLeXiwu1wT8qchccK76lyco9MdSuch5RYjeaZA=
 github.com/nutanix/terraform-provider-nutanix v1.2.2-0.20211029075448-e21f85ac2cf7/go.mod h1:XNd4Ph1C07UCzVdGq9IJ98nsRLq4gQwmiZ2fJo6Vhlg=
 github.com/nwaples/rardecode v1.0.0/go.mod h1:5DzqNKiOdpKKBH87u8VlvAnPZMXcGRhxWkRpHbbfGS0=

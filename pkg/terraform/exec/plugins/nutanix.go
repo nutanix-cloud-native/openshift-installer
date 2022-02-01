@@ -6,10 +6,10 @@ import (
 )
 
 func init() {
-	exec := func() {
+	nutanixProvider := func() {
 		plugin.Serve(&plugin.ServeOpts{
 			ProviderFunc: nutanix.Provider,
 		})
 	}
-	KnownPlugins["terraform-provider-nutanix"] = exec
+	KnownPlugins["terraform-provider-nutanix"] = nutanixProvider
 }

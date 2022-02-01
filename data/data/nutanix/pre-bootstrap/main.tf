@@ -12,16 +12,16 @@ provider "nutanix" {
 }
 
 #TODO: Upload instead of query
-resource "nutanix_image" "rhcos" {
-  name        = var.nutanix_image
-  source_path  = var.nutanix_image_filepath
-  description = local.description
-}
+#resource "nutanix_image" "rhcos" {
+#  name        = var.nutanix_image
+#  source_path  = var.nutanix_image_filepath
+#  description = local.description
+#}
 
 //for dev
-# data "nutanix_image" "rhcos" {
-#   image_name = "rhcos-manual"
-# }
+ data "nutanix_image" "rhcos" {
+   image_name = "rhcos-manual"
+ }
 
 resource "nutanix_category_key" "ocp_category_key" {
   name = "openshift-${var.cluster_id}"

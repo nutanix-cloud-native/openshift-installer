@@ -286,11 +286,6 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 
 			// RESOURCES ARGUMENTS
 
-			"enable_cpu_passthrough": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"use_hot_add": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -1082,7 +1077,6 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting guest_customization_sysprep for Virtual Machine %s: %s", d.Id(), err)
 	}
 
-	d.Set("enable_cpu_passthrough", resp.Status.Resources.EnableCPUPassthrough)
 	d.Set("guest_customization_cloud_init_user_data", cloudInitUser)
 	d.Set("guest_customization_cloud_init_meta_data", cloudInitMeta)
 	d.Set("hardware_clock_timezone", utils.StringValue(resp.Status.Resources.HardwareClockTimezone))
@@ -1187,12 +1181,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("parent_reference") {
 		_, n := d.GetChange("parent_reference")
 		res.ParentReference = validateRef(n.(map[string]interface{}))
-		hotPlugChange = false
-	}
-	if d.HasChange("enable_cpu_passthrough") {
-		_, n := d.GetChange("enable_cpu_passthrough")
-		res.EnableCPUPassthrough = utils.BoolPtr(n.(bool))
-		// TODO: Is this correct?
 		hotPlugChange = false
 	}
 	if d.HasChange("num_vnuma_nodes") {
@@ -1642,9 +1630,6 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	if v, ok := d.GetOk("num_vcpus_per_socket"); ok {
 		vm.NumVcpusPerSocket = utils.Int64Ptr(int64(v.(int)))
 	}
-	if v, ok := d.GetOk("enable_cpu_passthrough"); ok {
-		vm.EnableCPUPassthrough = utils.BoolPtr(v.(bool))
-	}
 	if v, ok := d.GetOk("num_sockets"); ok {
 		vm.NumSockets = utils.Int64Ptr(int64(v.(int)))
 	}
@@ -2023,7 +2008,7 @@ func expandNGT(d *schema.ResourceData) *v3.GuestToolsSpec {
 	}
 
 	if val, ok := d.GetOk("ngt_credentials"); ok {
-		guestTools.NutanixGuestTools.Credentials = convertMapInterfaceToMapString(val.(map[string]interface{}))
+		guestTools.NutanixGuestTools.Credentials = val.(map[string]string)
 	}
 
 	if reflect.DeepEqual(guestTools.NutanixGuestTools, &v3.NutanixGuestToolsSpec{}) {
@@ -2443,11 +2428,6 @@ func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
 
 			// RESOURCES ARGUMENTS
 
-			"enable_cpu_passthrough": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"num_vnuma_nodes": {
 				Type:     schema.TypeInt,
 				Optional: true,

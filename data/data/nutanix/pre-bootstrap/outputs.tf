@@ -1,6 +1,6 @@
 output "image_id" {
-  value = nutanix_image.rhcos.id
-  # value = data.nutanix_image.rhcos.id
+#  value = nutanix_image.rhcos.id
+   value = data.nutanix_image.rhcos.id
 }
 
 output "bootstrap_ignition_image_id" {
