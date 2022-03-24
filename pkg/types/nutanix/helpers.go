@@ -37,15 +37,17 @@ func CreateBootstrapISO(infraID, userData string) (string, error) {
 	metaObj := &metadataCloudInit{
 		UUID: id.String(),
 	}
-	fullISOFile := BootISOImageName(infraID)
+
 	metadata, err := json.Marshal(metaObj)
 	if err != nil {
 		return "", errors.Wrap(err, fmt.Sprintf("failed marshal metadata struct to json"))
 	}
+
 	writer, err := iso9660.NewWriter()
 	if err != nil {
 		return "", errors.Wrap(err, fmt.Sprintf("failed to create writer: %s", err))
 	}
+
 	defer writer.Cleanup()
 
 	userDataReader := strings.NewReader(userData)
@@ -59,6 +61,16 @@ func CreateBootstrapISO(infraID, userData string) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, fmt.Sprintf("failed to add file: %s", err))
 	}
+
+	cacheDir, err := os.UserCacheDir()
+	if err != nil {
+		return "", errors.Wrap(err, "unable to fetch user cache dir")
+	}
+
+	imgName := BootISOImageName(infraID)
+	application := "openshift-installer"
+	subdir := "image_cache"
+	fullISOFile := fmt.Sprintf("%s/%s/%s/%s", cacheDir, application, subdir, imgName)
 
 	outputFile, err := os.OpenFile(fullISOFile, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
