@@ -20,7 +20,7 @@ func CreateNutanixClient(ctx context.Context, prismCentral, port, username, pass
 		Password: password,
 		Port:     port,
 		Endpoint: prismCentral,
-		Insecure: false,
+		Insecure: true,
 	}
 
 	cli, err := nutanixClientV3.NewV3Client(cred)
