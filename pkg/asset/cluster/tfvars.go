@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	igntypes "github.com/coreos/ignition/v2/config/v3_2/types"
@@ -17,7 +18,6 @@ import (
 	"github.com/sirupsen/logrus"
 	awsprovider "sigs.k8s.io/cluster-api-provider-aws/pkg/apis/awsprovider/v1beta1"
 
-	nutanixprovider "github.com/openshift/machine-api-provider-nutanix/pkg/apis/nutanixprovider/v1beta1"
 	configv1 "github.com/openshift/api/config/v1"
 	machinev1 "github.com/openshift/api/machine/v1"
 	machinev1beta1 "github.com/openshift/api/machine/v1beta1"
@@ -783,17 +783,17 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
 		if err != nil {
 			return errors.Wrapf(err, "error getting control plane machines")
 		}
-		controlPlaneConfigs := make([]*nutanixprovider.NutanixMachineProviderConfig, len(controlPlanes))
+		controlPlaneConfigs := make([]*machinev1.NutanixMachineProviderConfig, len(controlPlanes))
 		for i, c := range controlPlanes {
-			controlPlaneConfigs[i] = c.Spec.ProviderSpec.Value.Object.(*nutanixprovider.NutanixMachineProviderConfig)
+			controlPlaneConfigs[i] = c.Spec.ProviderSpec.Value.Object.(*machinev1.NutanixMachineProviderConfig)
 		}
 
 		data, err = nutanixtfvars.TFVars(
 			nutanixtfvars.TFVarsSources{
-				PrismCentral:          installConfig.Config.Nutanix.PrismCentral,
-				Port:                  installConfig.Config.Nutanix.Port,
-				Username:              installConfig.Config.Nutanix.Username,
-				Password:              installConfig.Config.Nutanix.Password,
+				PrismCentral:          installConfig.Config.Nutanix.PrismCentral.Endpoint.Address,
+				Port:                  strconv.Itoa(int(installConfig.Config.Nutanix.PrismCentral.Endpoint.Port)),
+				Username:              installConfig.Config.Nutanix.PrismCentral.Username,
+				Password:              installConfig.Config.Nutanix.PrismCentral.Password,
 				ImageURL:              string(*rhcosImage),
 				BootstrapIgnitionData: bootstrapIgn,
 				ClusterID:             clusterID.InfraID,

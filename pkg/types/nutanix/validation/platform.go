@@ -1,6 +1,8 @@
 package validation
 
 import (
+	"strings"
+
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/openshift/installer/pkg/types/nutanix"
@@ -10,39 +12,93 @@ import (
 // ValidatePlatform checks that the specified platform is valid.
 // TODO(nutanix): Revisit for further expanding the validation logic
 func ValidatePlatform(p *nutanix.Platform, fldPath *field.Path) field.ErrorList {
+	var err error
 	allErrs := field.ErrorList{}
-	if len(p.PrismCentral) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath.Child("prismCentral"), "must specify the Prism Central"))
-	}
-	if len(p.PrismElementUUID) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath.Child("prismElement"), "must specify the Prism Element"))
-	}
-	if len(p.Username) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath.Child("username"), "must specify the username"))
-	}
-	if len(p.Password) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath.Child("password"), "must specify the password"))
-	}
-	if len(p.Port) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath.Child("port"), "must specify the port"))
-	}
-	if len(p.DefaultStorageContainer) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath.Child("defaultStorageContainer"), "must specify the default storage container"))
-	}
-	if len(p.SubnetUUID) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath.Child("subnet"), "must specify the subnet"))
-	}
-	if len(p.PrismCentral) != 0 {
-		if err := validate.Host(p.PrismCentral); err != nil {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("prismCentral"), p.PrismCentral, "must be the domain name or IP address of the Prism Central"))
+
+	if len(p.PrismCentral.Endpoint.Address) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("prismCentral").Child("endpoint").Child("address"),
+			"must specify the Prism Central endpoint address"))
+	} else {
+		if err = validate.Host(p.PrismCentral.Endpoint.Address); err != nil {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("prismCentral").Child("endpoint").Child("address"),
+				p.PrismCentral.Endpoint.Address, "must be the domain name or IP address of the Prism Central"))
 		}
 	}
 
+	if p.PrismCentral.Endpoint.Port < 1 || p.PrismCentral.Endpoint.Port > 65535 {
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("prismCentral").Child("endpoint").Child("port"),
+			p.PrismCentral.Endpoint.Port, "The Prism Central endpoint port is invalid, must be in the range of 1 to 65535"))
+	}
+
+	if len(p.PrismCentral.Username) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("prismCentral").Child("username"),
+			"must specify the Prism Central username"))
+	}
+
+	if len(p.PrismCentral.Password) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("prismCentral").Child("password"),
+			"must specify the Prism Central password"))
+	}
+
+	if len(p.PrismElements) != 1 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("prismElements"), "must specify the Prism Element (cluster)"))
+	}
+
+	if len(p.PrismElements[0].Name) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("prismElements[0]").Child("name"),
+			"must specify the Prism Element (cluster) name"))
+	}
+
+	if len(p.PrismElements[0].Endpoint.Address) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("prismElements[0]").Child("endpoint").Child("address"),
+			"must specify the Prism element (cluster) endpoint address"))
+	} else {
+		if err = validate.Host(p.PrismElements[0].Endpoint.Address); err != nil {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("prismElements[0]").Child("endpoint").Child("address"),
+				p.PrismElements[0].Endpoint.Address, "must be the domain name or IP address of the Prism Element (cluster)"))
+		}
+	}
+
+	if p.PrismElements[0].Endpoint.Port < 1 || p.PrismElements[0].Endpoint.Port > 65535 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("prismElements[0]").Child("endpoint").Child("port"),
+			"The Prism Element (cluster) endpoint port is invalid, must be in the range of 1 to 65535"))
+	}
+
+	if len(p.PrismElements[0].Username) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("prismElements[0]").Child("username"),
+			"must specify the Prism Element (cluster) username"))
+	}
+
+	if len(p.PrismElements[0].Password) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("prismElements[0]").Child("password"),
+			"must specify the Prism Element (cluster) password"))
+	}
+
+	if len(p.SubnetUUID) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("subnet"), "must specify the subnet"))
+	}
+
 	// If all VIPs are empty, skip IP validation.  All VIPs are required to be defined together.
-	if p.APIVIP != "" || p.IngressVIP != "" {
+	if strings.Join([]string{p.APIVIP, p.IngressVIP}, "") != "" {
 		allErrs = append(allErrs, validateVIPs(p, fldPath)...)
 	}
 
+	return allErrs
+}
+
+// ValidateForProvisioning checks that the specified platform is valid.
+func ValidateForProvisioning(p *nutanix.Platform, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	if len(p.PrismElements) == 0 || len(p.PrismElements[0].Name) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("prismElements"), "must specify the cluster"))
+	}
+
+	if len(p.SubnetUUID) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("subnet"), "must specify the subnet"))
+	}
+
+	allErrs = append(allErrs, validateVIPs(p, fldPath)...)
 	return allErrs
 }
 
@@ -62,7 +118,7 @@ func validateVIPs(p *nutanix.Platform, fldPath *field.Path) field.ErrorList {
 		allErrs = append(allErrs, field.Invalid(fldPath.Child("ingressVIP"), p.IngressVIP, err.Error()))
 	}
 
-	if p.APIVIP == p.IngressVIP {
+	if len(p.APIVIP) != 0 && len(p.IngressVIP) != 0 && p.APIVIP == p.IngressVIP {
 		allErrs = append(allErrs, field.Invalid(fldPath.Child("apiVIP"), p.APIVIP, "IPs for both API and Ingress should not be the same"))
 	}
 

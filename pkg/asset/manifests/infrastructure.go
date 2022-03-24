@@ -227,6 +227,20 @@ func (i *Infrastructure) Generate(dependencies asset.Parents) error {
 		}
 	case nutanix.Name:
 		config.Spec.PlatformSpec.Type = configv1.NutanixPlatformType
+		config.Spec.PlatformSpec.Nutanix = &configv1.NutanixPlatformSpec{
+			PrismCentral: configv1.NutanixPrismEndpoint{
+				Address: installConfig.Config.Nutanix.PrismCentral.Endpoint.Address,
+				Port:    installConfig.Config.Nutanix.PrismCentral.Endpoint.Port,
+			},
+			PrismElements: []configv1.NutanixPrismElementEndpoint{{
+				Name: installConfig.Config.Nutanix.PrismElements[0].Name,
+				Endpoint: configv1.NutanixPrismEndpoint{
+					Address: installConfig.Config.Nutanix.PrismElements[0].Endpoint.Address,
+					Port:    installConfig.Config.Nutanix.PrismElements[0].Endpoint.Port,
+				},
+			}},
+		}
+
 		if installConfig.Config.Nutanix.APIVIP != "" {
 			config.Status.PlatformStatus.Nutanix = &configv1.NutanixPlatformStatus{
 				APIServerInternalIP: installConfig.Config.Nutanix.APIVIP,

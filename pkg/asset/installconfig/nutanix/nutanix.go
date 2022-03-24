@@ -5,9 +5,11 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
+	configv1 "github.com/openshift/api/config/v1"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	nutanixClientV3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -31,13 +33,33 @@ func Platform() (*nutanix.Platform, error) {
 	if err != nil {
 		return nil, err
 	}
-	ctx := context.TODO()
-	v3Client := nutanixClient.V3Client
-	peUUID, err := getPrismElement(ctx, v3Client)
+
+	portNum, err := strconv.Atoi(nutanixClient.Port)
 	if err != nil {
 		return nil, err
 	}
-	subnetUUID, err := getSubnet(ctx, v3Client, peUUID)
+
+	pc := nutanixtypes.NutanixPrismCentral{
+		Endpoint: configv1.NutanixPrismEndpoint{
+			Address: nutanixClient.PrismCentral,
+			Port:    int32(portNum),
+		},
+		Username: nutanixClient.Username,
+		Password: nutanixClient.Password,
+	}
+
+	ctx := context.TODO()
+	v3Client := nutanixClient.V3Client
+	pe := nutanixtypes.NutanixPrismElement{}
+	err = getPrismElement(ctx, v3Client, &pe)
+	if err != nil {
+		return nil, err
+	}
+	pe.Endpoint.Port = int32(portNum)
+	pe.Username = nutanixClient.Username
+	pe.Password = nutanixClient.Password
+
+	subnetUUID, err := getSubnet(ctx, v3Client, pe.UUID)
 	if err != nil {
 		return nil, err
 	}
@@ -48,14 +70,11 @@ func Platform() (*nutanix.Platform, error) {
 	}
 
 	platform := &nutanix.Platform{
-		PrismCentral:     nutanixClient.PrismCentral,
-		Port:             nutanixClient.Port,
-		Username:         nutanixClient.Username,
-		Password:         nutanixClient.Password,
-		PrismElementUUID: peUUID,
-		SubnetUUID:       subnetUUID,
-		APIVIP:           apiVIP,
-		IngressVIP:       ingressVIP,
+		PrismCentral:  pc,
+		PrismElements: []nutanixtypes.NutanixPrismElement{pe},
+		SubnetUUID:    subnetUUID,
+		APIVIP:        apiVIP,
+		IngressVIP:    ingressVIP,
 	}
 	return platform, nil
 
@@ -146,7 +165,7 @@ func getClients() (*PrismCentralClient, error) {
 	}, nil
 }
 
-func getPrismElement(ctx context.Context, client *nutanixClientV3.Client) (string, error) {
+func getPrismElement(ctx context.Context, client *nutanixClientV3.Client, pe *nutanixtypes.NutanixPrismElement) error {
 	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 
@@ -154,26 +173,27 @@ func getPrismElement(ctx context.Context, client *nutanixClientV3.Client) (strin
 	emptyFilter := ""
 	pesAll, err := v3.ListAllCluster(emptyFilter)
 	if err != nil {
-		return "", errors.Wrap(err, "unable to list prism element clusters")
+		return errors.Wrap(err, "unable to list prism elements (clusters)")
 	}
 	pes := pesAll.Entities
 
 	if len(pes) == 0 {
-		return "", errors.New("did not find any prism element clusters")
+		return errors.New("did not find any prism elements (clusters)")
 	}
 
 	if len(pes) == 1 {
-		peName := pes[0].Spec.Name
-		peUUID := pes[0].Metadata.UUID
-		logrus.Infof("Defaulting to only available datacenter: %s", peName)
-		return *peUUID, nil
+		pe.Name = *pes[0].Spec.Name
+		pe.UUID = *pes[0].Metadata.UUID
+		pe.Endpoint.Address = *pes[0].Spec.Resources.Network.ExternalIP
+		logrus.Infof("Defaulting to only available prism element (cluster): %s", pe.Name)
+		return nil
 	}
 
-	peUUIDs := make(map[string]string)
+	pesMap := make(map[string]*nutanixClientV3.ClusterIntentResponse)
 	var peChoices []string
 	for _, p := range pes {
 		n := p.Spec.Name
-		peUUIDs[*n] = *p.Metadata.UUID
+		pesMap[*n] = p
 		peChoices = append(peChoices, *n)
 	}
 
@@ -188,10 +208,13 @@ func getPrismElement(ctx context.Context, client *nutanixClientV3.Client) (strin
 			Validate: survey.Required,
 		},
 	}, &selectedPe); err != nil {
-		return "", errors.Wrap(err, "failed UserInput")
+		return errors.Wrap(err, "failed UserInput")
 	}
 
-	return peUUIDs[selectedPe], nil
+	pe.Name = selectedPe
+	pe.UUID = *pesMap[selectedPe].Metadata.UUID
+	pe.Endpoint.Address = *pesMap[selectedPe].Spec.Resources.Network.ExternalIP
+	return nil
 
 }
 

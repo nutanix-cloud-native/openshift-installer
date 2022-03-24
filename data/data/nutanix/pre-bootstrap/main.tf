@@ -10,10 +10,15 @@ provider "nutanix" {
   port         = var.port
 }
 
-resource "nutanix_image" "rhcos" {
-  name        = var.nutanix_image
-  source_path = var.nutanix_image_filepath
-  description = local.description
+#resource "nutanix_image" "rhcos" {
+#  name        = var.nutanix_image
+#  source_path = var.nutanix_image_filepath
+#  description = local.description
+#}
+
+//for dev
+data "nutanix_image" "rhcos" {
+  image_name = "rhcos-4.10-nutanix"
 }
 
 resource "nutanix_category_key" "ocp_category_key" {

@@ -27,7 +27,6 @@ type metadataCloudInit struct {
 	UUID string `json:"uuid"`
 }
 
-
 func BootISOImageName(infraID string) string {
 	return fmt.Sprintf("%s-%s", infraID, isoFile)
 }
@@ -139,5 +138,6 @@ func getTaskStatus(clientV3 nutanixClientV3.Service, taskUUID string) (string, e
 
 // RHCOSImageName generates a unique name for a given infraID
 func RHCOSImageName(infraID string) string {
-	return fmt.Sprintf("%s-rhcos", infraID)
+	//return fmt.Sprintf("%s-rhcos", infraID)
+	return "rhcos-4.10-nutanix"
 }

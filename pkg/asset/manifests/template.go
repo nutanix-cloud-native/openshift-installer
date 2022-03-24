@@ -56,10 +56,11 @@ type OvirtCredsSecretData struct {
 
 // NutanixCredsSecretData holds encoded credentials and is used to generate cloud-creds secret
 type NutanixCredsSecretData struct {
-	Base64encodeNutanixEndpoint string
-	Base64encodeNutanixPort     string
-	Base64encodeNutanixUsername string
-	Base64encodeNutanixPassword string
+	Base64encodeNutanixPrismCentralUsername string
+	Base64encodeNutanixPrismCentralPassword string
+	Base64encodeNutanixPrismElementName     string
+	Base64encodeNutanixPrismElementUsername string
+	Base64encodeNutanixPrismElementPassword string
 }
 
 type cloudCredsSecretData struct {

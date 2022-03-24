@@ -215,10 +215,11 @@ func (o *Openshift) Generate(dependencies asset.Parents) error {
 	case nutanixtypes.Name:
 		cloudCreds = cloudCredsSecretData{
 			Nutanix: &NutanixCredsSecretData{
-				Base64encodeNutanixEndpoint: base64.StdEncoding.EncodeToString([]byte(installConfig.Config.Nutanix.PrismCentral)),
-				Base64encodeNutanixPort:     base64.StdEncoding.EncodeToString([]byte(installConfig.Config.Nutanix.Port)),
-				Base64encodeNutanixUsername: base64.StdEncoding.EncodeToString([]byte(installConfig.Config.Nutanix.Username)),
-				Base64encodeNutanixPassword: base64.StdEncoding.EncodeToString([]byte(installConfig.Config.Nutanix.Password)),
+				Base64encodeNutanixPrismCentralUsername: base64.StdEncoding.EncodeToString([]byte(installConfig.Config.Nutanix.PrismCentral.Username)),
+				Base64encodeNutanixPrismCentralPassword: base64.StdEncoding.EncodeToString([]byte(installConfig.Config.Nutanix.PrismCentral.Password)),
+				Base64encodeNutanixPrismElementName:     installConfig.Config.Nutanix.PrismElements[0].Name,
+				Base64encodeNutanixPrismElementUsername: base64.StdEncoding.EncodeToString([]byte(installConfig.Config.Nutanix.PrismElements[0].Username)),
+				Base64encodeNutanixPrismElementPassword: base64.StdEncoding.EncodeToString([]byte(installConfig.Config.Nutanix.PrismElements[0].Password)),
 			},
 		}
 	}

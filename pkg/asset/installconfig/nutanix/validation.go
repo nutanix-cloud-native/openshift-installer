@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/pkg/errors"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -24,10 +25,10 @@ func Validate(ic *types.InstallConfig) error {
 	}
 
 	client, err := nutanixtypes.CreateNutanixClient(context.TODO(),
-		p.PrismCentral,
-		p.Port,
-		p.Username,
-		p.Password)
+		p.PrismCentral.Endpoint.Address,
+		strconv.Itoa(int(p.PrismCentral.Endpoint.Port)),
+		p.PrismCentral.Username,
+		p.PrismCentral.Password)
 
 	if err != nil {
 		return errors.New(field.InternalError(field.NewPath("platform", "nutanix"), errors.Wrapf(err, "unable to connect to Prism Central %s.", p.PrismCentral)).Error())
@@ -50,10 +51,10 @@ func ValidateForProvisioning(ic *types.InstallConfig) error {
 
 	p := ic.Platform.Nutanix
 	_, err := nutanixtypes.CreateNutanixClient(context.TODO(),
-		p.PrismCentral,
-		p.Port,
-		p.Username,
-		p.Password)
+		p.PrismCentral.Endpoint.Address,
+		strconv.Itoa(int(p.PrismCentral.Endpoint.Port)),
+		p.PrismCentral.Username,
+		p.PrismCentral.Password)
 
 	if err != nil {
 		return errors.New(field.InternalError(field.NewPath("platform", "nutanix"), errors.Wrapf(err, "unable to connect to Prism Central %s.", p.PrismCentral)).Error())
