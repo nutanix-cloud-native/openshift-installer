@@ -74,6 +74,10 @@ func ValidatePlatform(p *nutanix.Platform, fldPath *field.Path) field.ErrorList 
 			"must specify the Prism Element (cluster) password"))
 	}
 
+	//if len(p.DefaultStorageContainer) == 0 {
+	//	allErrs = append(allErrs, field.Required(fldPath.Child("defaultStorageContainer"), "must specify the default storage container"))
+	//}
+
 	if len(p.SubnetUUID) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("subnet"), "must specify the subnet"))
 	}

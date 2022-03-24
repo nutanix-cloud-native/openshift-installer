@@ -122,6 +122,7 @@ func getClients() (*PrismCentralClient, error) {
 	}, &password); err != nil {
 		return nil, errors.Wrap(err, "failed UserInput")
 	}
+
 	if err := survey.Ask([]*survey.Question{
 		{
 			Prompt: &survey.Input{
@@ -134,6 +135,19 @@ func getClients() (*PrismCentralClient, error) {
 	}, &port); err != nil {
 		return nil, errors.Wrap(err, "failed UserInput")
 	}
+	//
+	//if err := survey.Ask([]*survey.Question{
+	//	{
+	//		Prompt: &survey.Input{
+	//			Message: "Default Storage container",
+	//			Help:    "Default Storage container for the Prism Central.",
+	//			Default: "",
+	//		},
+	//		Validate: survey.Required,
+	//	},
+	//}, &defaultStorageContainer); err != nil {
+	//	return nil, errors.Wrap(err, "failed UserInput")
+	//}
 
 	// There is a noticeable delay when creating the client, so let the user know what's going on.
 	logrus.Infof("Connecting to Prism Central %s", prismCentral)
@@ -143,12 +157,6 @@ func getClients() (*PrismCentralClient, error) {
 		username,
 		password,
 	)
-	emptyFilter := ""
-	_, err = clientV3.V3.ListAllCluster(emptyFilter)
-
-	if err != nil {
-		return nil, errors.Wrap(err, "failed UserInput")
-	}
 
 	// Survey does not allow validation of groups of input
 	// so we perform our own validation.
