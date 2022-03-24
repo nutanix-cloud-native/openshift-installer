@@ -47,8 +47,6 @@ var (
 	VSphere = provider("vsphere")
 	// VSpherePrivate is an internal provider augmenting the VSphere provider by adding functionality.
 	VSpherePrivate = provider("vsphereprivate")
-	// Nutanix is the provider for creating resources in Nutanix
-	Nutanix = provider("nutanix")
 )
 
 // Provider is a terraform provider.
