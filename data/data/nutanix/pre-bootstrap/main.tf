@@ -8,6 +8,7 @@ provider "nutanix" {
   password     = var.password
   endpoint     = var.prism_central
   port         = var.port
+  insecure     = true
 }
 
 resource "nutanix_image" "rhcos" {
