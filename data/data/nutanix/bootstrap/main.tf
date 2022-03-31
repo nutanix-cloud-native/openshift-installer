@@ -10,6 +10,16 @@ provider "nutanix" {
   port         = var.nutanix_prism_central_port
 }
 
+resource "nutanix_image" "bootstrap_ignition" {
+  name        = var.nutanix_bootstrap_ignition_image
+  source_path = var.nutanix_bootstrap_ignition_image_filepath
+  description = local.description
+  categories {
+    name  = var.ocp_category_key_id
+    value = var.ocp_category_value_id
+  }
+}
+
 resource "nutanix_virtual_machine" "vm_bootstrap" {
   name                 = "${var.cluster_id}-bootstrap"
   description          = local.description
@@ -48,7 +58,7 @@ resource "nutanix_virtual_machine" "vm_bootstrap" {
     }
     data_source_reference = {
       kind = "image"
-      uuid = var.bootstrap_ignition_image_id
+      uuid = nutanix_image.bootstrap_ignition.id
     }
   }
 

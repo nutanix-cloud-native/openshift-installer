@@ -10,5 +10,4 @@ import (
 var PlatformStages = []terraform.Stage{
 	stages.NewStage("nutanix", "pre-bootstrap", []providers.Provider{providers.Nutanix}),
 	stages.NewStage("nutanix", "bootstrap", []providers.Provider{providers.Nutanix}, stages.WithNormalBootstrapDestroy()),
-	stages.NewStage("nutanix", "master", []providers.Provider{providers.Nutanix}),
 }
