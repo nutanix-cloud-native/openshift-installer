@@ -212,15 +212,6 @@ func (o *Openshift) Generate(dependencies asset.Parents) error {
 				Base64encodeCABundle: base64.StdEncoding.EncodeToString([]byte(conf.CABundle)),
 			},
 		}
-	case nutanixtypes.Name:
-		cloudCreds = cloudCredsSecretData{
-			Nutanix: &NutanixCredsSecretData{
-				Base64encodeEndpoint: base64.StdEncoding.EncodeToString([]byte(installConfig.Config.Nutanix.PrismCentral)),
-				Base64encodePort:     base64.StdEncoding.EncodeToString([]byte(installConfig.Config.Nutanix.Port)),
-				Base64encodeUsername: base64.StdEncoding.EncodeToString([]byte(installConfig.Config.Nutanix.Username)),
-				Base64encodePassword: base64.StdEncoding.EncodeToString([]byte(installConfig.Config.Nutanix.Password)),
-			},
-		}
 	}
 
 	templateData := &openshiftTemplateData{
