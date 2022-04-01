@@ -3,6 +3,7 @@ package validation
 import (
 	"testing"
 
+	configv1 "github.com/openshift/api/config/v1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
@@ -11,13 +12,18 @@ import (
 
 func validPlatform() *nutanix.Platform {
 	return &nutanix.Platform{
-		PrismCentral:            "test-pc",
-		PrismElementUUID:        "12992bc3-e919-454b-980e-8b51e217c9bd",
-		DefaultStorageContainer: "test-storage-container",
-		Username:                "test-username",
-		Password:                "test-password",
-		SubnetUUID:              "b06179c8-dea3-4f8e-818a-b2e88fbc2201",
-		Port:                    "8080",
+		PrismCentral: nutanix.PrismCentral{
+			Endpoint: configv1.NutanixPrismEndpoint{Address: "test-pc", Port: 8080},
+			Username: "test-username-pc",
+			Password: "test-password-pc",
+		},
+		PrismElements: []nutanix.PrismElement{{
+			UUID:     "test-pe-uuid",
+			Endpoint: configv1.NutanixPrismElementEndpoint{Name: "test-pe-name", Endpoint: configv1.NutanixPrismEndpoint{Address: "test-pe", Port: 8081}},
+			Username: "test-username-pe",
+			Password: "test-password-pe",
+		}},
+		SubnetUUID: "test-subnet",
 	}
 }
 
@@ -32,49 +38,49 @@ func TestValidatePlatform(t *testing.T) {
 			platform: validPlatform(),
 		},
 		{
-			name: "missing Prism Central name",
+			name: "missing prism central address",
 			platform: func() *nutanix.Platform {
 				p := validPlatform()
-				p.PrismCentral = ""
+				p.PrismCentral.Endpoint.Address = ""
 				return p
 			}(),
-			expectedError: `^test-path\.prismCentral: Required value: must specify the Prism Central$`,
+			expectedError: `^test-path\.prismCentral\.endpoint\.address: Required value: must specify the Prism Central endpoint address$`,
 		},
 		{
-			name: "missing username",
+			name: "missing prism central username",
 			platform: func() *nutanix.Platform {
 				p := validPlatform()
-				p.Username = ""
+				p.PrismCentral.Username = ""
 				return p
 			}(),
-			expectedError: `^test-path\.username: Required value: must specify the username$`,
+			expectedError: `^test-path\.prismCentral\.username: Required value: must specify the Prism Central username$`,
 		},
 		{
-			name: "missing password",
+			name: "missing prism central password",
 			platform: func() *nutanix.Platform {
 				p := validPlatform()
-				p.Password = ""
+				p.PrismCentral.Password = ""
 				return p
 			}(),
-			expectedError: `^test-path\.password: Required value: must specify the password$`,
+			expectedError: `^test-path\.prismCentral\.password: Required value: must specify the Prism Central password$`,
 		},
 		{
-			name: "missing prism element",
+			name: "missing prism element name",
 			platform: func() *nutanix.Platform {
 				p := validPlatform()
-				p.PrismElementUUID = ""
+				p.PrismElements[0].Endpoint.Name = ""
 				return p
 			}(),
-			expectedError: `^test-path\.prismElement: Required value: must specify the Prism Element$`,
+			expectedError: `^test-path\.prismElements\[0\]\.endpoint\.name: Required value: must specify the Prism Element (cluster) name$`,
 		},
 		{
-			name: "missing default storage container",
+			name: "missing prism element address",
 			platform: func() *nutanix.Platform {
 				p := validPlatform()
-				p.DefaultStorageContainer = ""
+				p.PrismElements[0].Endpoint.Endpoint.Address = ""
 				return p
 			}(),
-			expectedError: `^test-path\.defaultStorageContainer: Required value: must specify the default storage container$`,
+			expectedError: `^test-path\.prismElements\[0\]\.endpoint\.endpoint\.address: Required value: must specify the Prism element (cluster) endpoint address$`,
 		},
 		{
 			name: "valid VIPs",
@@ -136,22 +142,22 @@ func TestValidatePlatform(t *testing.T) {
 			expectedError: `^test-path\.apiVIP: Invalid value: "192.168.111.1": IPs for both API and Ingress should not be the same$`,
 		},
 		{
-			name: "Capital letters in Prism Central",
+			name: "Capital letters in Prism Central address",
 			platform: func() *nutanix.Platform {
 				p := validPlatform()
-				p.PrismCentral = "tEsT-PrismCentral"
+				p.PrismCentral.Endpoint.Address = "tEsT-PrismCentral"
 				return p
 			}(),
-			expectedError: `^test-path\.prismCentral: Invalid value: "tEsT-PrismCentral": must be the domain name or IP address of the Prism Central$`,
+			expectedError: `^test-path\.prismCentral\.endpoint\.address: Invalid value: "tEsT-PrismCentral": must be the domain name or IP address of the Prism Central$`,
 		},
 		{
 			name: "URL as Prism Central",
 			platform: func() *nutanix.Platform {
 				p := validPlatform()
-				p.PrismCentral = "https://test-pc"
+				p.PrismCentral.Endpoint.Address = "https://test-pc"
 				return p
 			}(),
-			expectedError: `^test-path\.prismCentral: Invalid value: "https://test-pc": must be the domain name or IP address of the Prism Central$`,
+			expectedError: `^test-path\.prismCentral\.endpoint\.address: Invalid value: "https://test-pc": must be the domain name or IP address of the Prism Central$`,
 		},
 	}
 	for _, tc := range cases {

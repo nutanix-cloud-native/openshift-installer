@@ -165,13 +165,18 @@ func validOpenStackPlatform() *openstack.Platform {
 
 func validNutanixPlatform() *nutanix.Platform {
 	return &nutanix.Platform{
-		PrismCentral:            "test-pc",
-		PrismElementUUID:        "test-pe",
-		DefaultStorageContainer: "test-storage-container",
-		Username:                "test-username",
-		Password:                "test-password",
-		SubnetUUID:              "test-subnet",
-		Port:                    "8080",
+		PrismCentral: nutanix.PrismCentral{
+			Endpoint: configv1.NutanixPrismEndpoint{Address: "test-pc", Port: 8080},
+			Username: "test-username-pc",
+			Password: "test-password-pc",
+		},
+		PrismElements: []nutanix.PrismElement{{
+			UUID:     "test-pe-uuid",
+			Endpoint: configv1.NutanixPrismElementEndpoint{Name: "test-pe-name", Endpoint: configv1.NutanixPrismEndpoint{Address: "test-pe", Port: 8081}},
+			Username: "test-username-pe",
+			Password: "test-password-pe",
+		}},
+		SubnetUUID: "test-subnet",
 	}
 }
 
@@ -1479,10 +1484,10 @@ func TestValidateInstallConfig(t *testing.T) {
 				c.Platform = types.Platform{
 					Nutanix: validNutanixPlatform(),
 				}
-				c.Platform.Nutanix.PrismCentral = ""
+				c.Platform.Nutanix.PrismCentral.Endpoint.Address = ""
 				return c
 			}(),
-			expectedError: `^platform\.nutanix\.prismCentral: Required value: must specify the Prism Central$`,
+			expectedError: `^platform\.nutanix\.prismCentral\.endpoint\.address: Required value: must specify the Prism Central endpoint address$`,
 		},
 		{
 			name: "valid baseline capability set",

@@ -4,7 +4,9 @@ package nutanix
 import (
 	"context"
 	"fmt"
+	configv1 "github.com/openshift/api/config/v1"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -33,14 +35,27 @@ func Platform() (*nutanix.Platform, error) {
 		return nil, err
 	}
 
-	ctx := context.TODO()
-	v3Client := nutanixClient.V3Client
-	peUUID, err := getPrismElement(ctx, v3Client)
+	portNum, err := strconv.Atoi(nutanixClient.Port)
 	if err != nil {
 		return nil, err
 	}
 
-	subnetUUID, err := getSubnet(ctx, v3Client, peUUID)
+	pc := nutanixtypes.PrismCentral{
+		Endpoint: configv1.NutanixPrismEndpoint{
+			Address: nutanixClient.PrismCentral,
+			Port:    int32(portNum),
+		},
+		Username: nutanixClient.Username,
+		Password: nutanixClient.Password,
+	}
+
+	ctx := context.TODO()
+	pe, err := getPrismElement(ctx, nutanixClient)
+	if err != nil {
+		return nil, err
+	}
+
+	subnetUUID, err := getSubnet(ctx, nutanixClient, pe.UUID)
 	if err != nil {
 		return nil, err
 	}
@@ -50,21 +65,12 @@ func Platform() (*nutanix.Platform, error) {
 		return nil, errors.Wrap(err, "failed to get VIPs")
 	}
 
-	defaultStorageContainer, err := getDefaultStorageContainer()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get default storage container")
-	}
-
 	platform := &nutanix.Platform{
-		PrismCentral:            nutanixClient.PrismCentral,
-		Port:                    nutanixClient.Port,
-		Username:                nutanixClient.Username,
-		Password:                nutanixClient.Password,
-		PrismElementUUID:        peUUID,
-		SubnetUUID:              subnetUUID,
-		DefaultStorageContainer: defaultStorageContainer,
-		APIVIP:                  apiVIP,
-		IngressVIP:              ingressVIP,
+		PrismCentral:  pc,
+		PrismElements: []nutanixtypes.PrismElement{*pe},
+		SubnetUUID:    subnetUUID,
+		APIVIP:        apiVIP,
+		IngressVIP:    ingressVIP,
 	}
 	return platform, nil
 
@@ -147,31 +153,65 @@ func getClients() (*PrismCentralClient, error) {
 	}, nil
 }
 
-func getPrismElement(ctx context.Context, client *nutanixclientv3.Client) (string, error) {
+func getPrismElement(ctx context.Context, client *PrismCentralClient) (*nutanixtypes.PrismElement, error) {
 	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 
 	emptyFilter := ""
-	allPrismElements, err := client.V3.ListAllCluster(emptyFilter)
+	allPrismElements, err := client.V3Client.V3.ListAllCluster(emptyFilter)
 	if err != nil {
-		return "", errors.Wrap(err, "unable to list prism element clusters")
+		return nil, errors.Wrap(err, "unable to list prism element clusters")
 	}
 
 	pes := allPrismElements.Entities
 	if len(pes) == 0 {
-		return "", errors.New("did not find any prism element clusters")
-	} else if len(pes) == 1 {
+		return nil, errors.New("did not find any prism element clusters")
+	}
+
+	portNum, err := strconv.Atoi(client.Port)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(pes) == 1 {
 		peName := *pes[0].Spec.Name
 		peUUID := *pes[0].Metadata.UUID
 		logrus.Infof("Defaulting to only available prism element: %s", peName)
-		return peUUID, nil
+		pe := &nutanixtypes.PrismElement{
+			UUID: peUUID,
+			Endpoint: configv1.NutanixPrismElementEndpoint{
+				Name: peName,
+				Endpoint: configv1.NutanixPrismEndpoint{
+					Address: *pes[0].Spec.Resources.Network.ExternalIP,
+					Port: int32(portNum),
+				},
+			},
+			Username: client.Username,
+			Password: client.Password,
+		}
+		return pe, nil
 	}
 
-	peUUIDs := make(map[string]string)
+	pesMap := make(map[string]*nutanixtypes.PrismElement)
 	var peChoices []string
 	for _, p := range pes {
+		if p.Spec.Resources.Network.ExternalIP == nil {
+			continue
+		}
+		pe := &nutanixtypes.PrismElement{
+			UUID: *p.Metadata.UUID,
+			Endpoint: configv1.NutanixPrismElementEndpoint{
+				Name: *p.Spec.Name,
+				Endpoint: configv1.NutanixPrismEndpoint{
+					Address: *p.Spec.Resources.Network.ExternalIP,
+					Port: int32(portNum),
+				},
+			},
+			Username: client.Username,
+			Password: client.Password,
+		}
 		n := *p.Spec.Name
-		peUUIDs[n] = *p.Metadata.UUID
+		pesMap[n] = pe
 		peChoices = append(peChoices, n)
 	}
 
@@ -186,18 +226,17 @@ func getPrismElement(ctx context.Context, client *nutanixclientv3.Client) (strin
 			Validate: survey.Required,
 		},
 	}, &selectedPe); err != nil {
-		return "", errors.Wrap(err, "failed UserInput")
+		return nil, errors.Wrap(err, "failed UserInput")
 	}
 
-	return peUUIDs[selectedPe], nil
-
+	return pesMap[selectedPe], nil
 }
 
-func getSubnet(ctx context.Context, client *nutanixclientv3.Client, peUUID string) (string, error) {
+func getSubnet(ctx context.Context, client *PrismCentralClient, peUUID string) (string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 	emptyFilter := ""
-	subnetsAll, err := client.V3.ListAllSubnet(emptyFilter)
+	subnetsAll, err := client.V3Client.V3.ListAllSubnet(emptyFilter)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to list subnets")
 	}
@@ -280,21 +319,4 @@ func getVIPs() (string, string, error) {
 	}
 
 	return apiVIP, ingressVIP, nil
-}
-
-func getDefaultStorageContainer() (string, error) {
-	var defaultStorageContainer string
-	if err := survey.Ask([]*survey.Question{
-		{
-			Prompt: &survey.Password{
-				Message: "Default Storage Container",
-				Help:    "The name of the default storage container for the cluster.",
-			},
-			Validate: survey.Required,
-		},
-	}, &defaultStorageContainer); err != nil {
-		return "", errors.Wrap(err, "failed UserInput")
-	}
-
-	return defaultStorageContainer, nil
 }
