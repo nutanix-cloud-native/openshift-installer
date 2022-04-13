@@ -10,20 +10,20 @@ import (
 )
 
 type config struct {
-	PrismCentralAddress       string `json:"nutanix_prism_central_address"`
-	Port                      string `json:"nutanix_prism_central_port"`
-	Username                  string `json:"nutanix_username"`
-	Password                  string `json:"nutanix_password"`
-	MemoryMiB                 int64  `json:"nutanix_control_plane_memory_mib"`
-	DiskSizeMiB               int64  `json:"nutanix_control_plane_disk_mib"`
-	NumCPUs                   int64  `json:"nutanix_control_plane_num_cpus"`
-	NumCoresPerSocket         int64  `json:"nutanix_control_plane_cores_per_socket"`
-	PrismElementUUID          string `json:"nutanix_prism_element_uuid"`
-	SubnetUUID                string `json:"nutanix_subnet_uuid"`
-	Image                     string `json:"nutanix_image"`
-	ImageFileURI              string `json:"nutanix_image_uri"`
-	BootstrapIgnitionImage    string `json:"nutanix_bootstrap_ignition_image"`
-	BootstrapIgnitionImageURI string `json:"nutanix_bootstrap_ignition_image_path"`
+	PrismCentralAddress            string `json:"nutanix_prism_central_address"`
+	Port                           string `json:"nutanix_prism_central_port"`
+	Username                       string `json:"nutanix_username"`
+	Password                       string `json:"nutanix_password"`
+	MemoryMiB                      int64  `json:"nutanix_control_plane_memory_mib"`
+	DiskSizeMiB                    int64  `json:"nutanix_control_plane_disk_mib"`
+	NumCPUs                        int64  `json:"nutanix_control_plane_num_cpus"`
+	NumCoresPerSocket              int64  `json:"nutanix_control_plane_cores_per_socket"`
+	PrismElementUUID               string `json:"nutanix_prism_element_uuid"`
+	SubnetUUID                     string `json:"nutanix_subnet_uuid"`
+	Image                          string `json:"nutanix_image"`
+	ImageFileURI                   string `json:"nutanix_image_uri"`
+	BootstrapIgnitionImage         string `json:"nutanix_bootstrap_ignition_image"`
+	BootstrapIgnitionImageFilePath string `json:"nutanix_bootstrap_ignition_image_filepath"`
 }
 
 // TFVarsSources contains the parameters to be converted into Terraform variables
@@ -53,20 +53,20 @@ func TFVars(sources TFVarsSources) ([]byte, error) {
 	bootstrapIgnitionImageName := nutanixtypes.BootISOImageName(sources.ClusterID)
 	controlPlaneConfig := sources.ControlPlaneConfigs[0]
 	cfg := &config{
-		Port:                      sources.Port,
-		PrismCentralAddress:       sources.PrismCentralAddress,
-		Username:                  sources.Username,
-		Password:                  sources.Password,
-		MemoryMiB:                 controlPlaneConfig.MemorySizeMib,
-		DiskSizeMiB:               controlPlaneConfig.DiskSizeMib,
-		NumCPUs:                   controlPlaneConfig.NumSockets,
-		NumCoresPerSocket:         controlPlaneConfig.NumVcpusPerSocket,
-		PrismElementUUID:          controlPlaneConfig.ClusterReferenceUUID,
-		SubnetUUID:                controlPlaneConfig.SubnetUUID,
-		Image:                     controlPlaneConfig.ImageName,
-		ImageFileURI:              sources.ImageURL,
-		BootstrapIgnitionImage:    bootstrapIgnitionImageName,
-		BootstrapIgnitionImageURI: bootstrapIgnitionImagePath,
+		Port:                           sources.Port,
+		PrismCentralAddress:            sources.PrismCentralAddress,
+		Username:                       sources.Username,
+		Password:                       sources.Password,
+		MemoryMiB:                      controlPlaneConfig.MemorySizeMib,
+		DiskSizeMiB:                    controlPlaneConfig.DiskSizeMib,
+		NumCPUs:                        controlPlaneConfig.NumSockets,
+		NumCoresPerSocket:              controlPlaneConfig.NumVcpusPerSocket,
+		PrismElementUUID:               controlPlaneConfig.ClusterReferenceUUID,
+		SubnetUUID:                     controlPlaneConfig.SubnetUUID,
+		Image:                          controlPlaneConfig.ImageName,
+		ImageFileURI:                   sources.ImageURL,
+		BootstrapIgnitionImage:         bootstrapIgnitionImageName,
+		BootstrapIgnitionImageFilePath: bootstrapIgnitionImagePath,
 	}
 	return json.MarshalIndent(cfg, "", "  ")
 }
