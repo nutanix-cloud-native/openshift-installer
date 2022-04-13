@@ -23,7 +23,7 @@ type config struct {
 	Image                     string `json:"nutanix_image"`
 	ImageFileURI              string `json:"nutanix_image_uri"`
 	BootstrapIgnitionImage    string `json:"nutanix_bootstrap_ignition_image"`
-	BootstrapIgnitionImageURI string `json:"nutanix_bootstrap_ignition_image_uri"`
+	BootstrapIgnitionImageURI string `json:"nutanix_bootstrap_ignition_image_path"`
 }
 
 // TFVarsSources contains the parameters to be converted into Terraform variables
