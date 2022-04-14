@@ -2,12 +2,16 @@ package nutanix
 
 import (
 	"encoding/json"
-
-	nutanixapis "github.com/openshift/machine-api-provider-nutanix/pkg/apis/nutanixprovider/v1beta1"
-	"github.com/pkg/errors"
-
 	"github.com/openshift/installer/pkg/tfvars/internal/cache"
 	nutanixtypes "github.com/openshift/installer/pkg/types/nutanix"
+	nutanixapis "github.com/openshift/machine-api-provider-nutanix/pkg/apis/nutanixprovider/v1beta1"
+	"github.com/pkg/errors"
+	"os"
+)
+
+const (
+	nutanixOSImageOverrideEnvVar                = "NUTANIX_OS_IMAGE_URI"
+	nutanixBootstrapIgnitionImageOverrideEnvVar = "NUTANIX_IGNITION_IMAGE_URI"
 )
 
 type config struct {
@@ -22,9 +26,11 @@ type config struct {
 	PrismElementUUID               string `json:"nutanix_prism_element_uuid"`
 	SubnetUUID                     string `json:"nutanix_subnet_uuid"`
 	Image                          string `json:"nutanix_image"`
-	ImageFilePath                  string `json:"nutanix_image_filepath"`
+	ImageFilePath                  string `json:"nutanix_image_filepath,omitempty"`
+	ImageURI                       string `json:"nutanix_image_uri,omitempty"`
 	BootstrapIgnitionImage         string `json:"nutanix_bootstrap_ignition_image"`
-	BootstrapIgnitionImageFilePath string `json:"nutanix_bootstrap_ignition_image_filepath"`
+	BootstrapIgnitionImageFilePath string `json:"nutanix_bootstrap_ignition_image_filepath,omitempty"`
+	BootstrapIgnitionImageURI      string `json:"nutanix_bootstrap_ignition_image_uri,omitempty"`
 }
 
 // TFVarsSources contains the parameters to be converted into Terraform variables
@@ -41,9 +47,32 @@ type TFVarsSources struct {
 
 //TFVars generate Nutanix-specific Terraform variables
 func TFVars(sources TFVarsSources) ([]byte, error) {
-	cachedImage, err := cache.DownloadImageFile(sources.ImageURL)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to use cached nutanix image")
+	controlPlaneConfig := sources.ControlPlaneConfigs[0]
+	bootstrapIgnitionImageName := nutanixtypes.BootISOImageName(sources.ClusterID)
+	cfg := &config{
+		Port:                   sources.Port,
+		PrismCentralAddress:    sources.PrismCentralAddress,
+		Username:               sources.Username,
+		Password:               sources.Password,
+		MemoryMiB:              controlPlaneConfig.MemorySizeMib,
+		DiskSizeMiB:            controlPlaneConfig.DiskSizeMib,
+		NumCPUs:                controlPlaneConfig.NumSockets,
+		NumCoresPerSocket:      controlPlaneConfig.NumVcpusPerSocket,
+		PrismElementUUID:       controlPlaneConfig.ClusterReferenceUUID,
+		SubnetUUID:             controlPlaneConfig.SubnetUUID,
+		Image:                  controlPlaneConfig.ImageName,
+		BootstrapIgnitionImage: bootstrapIgnitionImageName,
+	}
+
+	osImageOverride := os.Getenv(nutanixOSImageOverrideEnvVar)
+	if osImageOverride != "" {
+		cfg.ImageURI = osImageOverride
+	} else {
+		cachedImage, err := cache.DownloadImageFile(sources.ImageURL)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to use cached nutanix image")
+		}
+		cfg.ImageFilePath = cachedImage
 	}
 
 	bootstrapIgnitionImagePath, err := nutanixtypes.CreateBootstrapISO(sources.ClusterID, sources.BootstrapIgnitionData)
@@ -51,23 +80,12 @@ func TFVars(sources TFVarsSources) ([]byte, error) {
 		return nil, errors.Wrap(err, "failed to create bootstrap ignition iso")
 	}
 
-	bootstrapIgnitionImageName := nutanixtypes.BootISOImageName(sources.ClusterID)
-	controlPlaneConfig := sources.ControlPlaneConfigs[0]
-	cfg := &config{
-		Port:                           sources.Port,
-		PrismCentralAddress:            sources.PrismCentralAddress,
-		Username:                       sources.Username,
-		Password:                       sources.Password,
-		MemoryMiB:                      controlPlaneConfig.MemorySizeMib,
-		DiskSizeMiB:                    controlPlaneConfig.DiskSizeMib,
-		NumCPUs:                        controlPlaneConfig.NumSockets,
-		NumCoresPerSocket:              controlPlaneConfig.NumVcpusPerSocket,
-		PrismElementUUID:               controlPlaneConfig.ClusterReferenceUUID,
-		SubnetUUID:                     controlPlaneConfig.SubnetUUID,
-		Image:                          controlPlaneConfig.ImageName,
-		ImageFilePath:                  cachedImage,
-		BootstrapIgnitionImage:         bootstrapIgnitionImageName,
-		BootstrapIgnitionImageFilePath: bootstrapIgnitionImagePath,
+	ignitionImageOverride := os.Getenv(nutanixBootstrapIgnitionImageOverrideEnvVar)
+	if ignitionImageOverride != "" {
+		cfg.BootstrapIgnitionImageURI = ignitionImageOverride
+	} else {
+		cfg.BootstrapIgnitionImageFilePath = bootstrapIgnitionImagePath
 	}
+
 	return json.MarshalIndent(cfg, "", "  ")
 }
