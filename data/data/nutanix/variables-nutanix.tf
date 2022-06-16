@@ -71,3 +71,8 @@ variable "nutanix_control_plane_num_cpus" {
 variable "nutanix_control_plane_cores_per_socket" {
   type = number
 }
+
+variable "disk_sizes" {
+  type = list(string)
+  default = [51200]
+}

@@ -75,4 +75,19 @@ resource "nutanix_virtual_machine" "vm_master" {
   nic_list {
     subnet_uuid = var.nutanix_subnet_uuid
   }
+
+  dynamic "disk_list" {
+    for_each = [for disk in var.disk_sizes : disk]
+    content {
+      disk_size_mib = disk_list.value
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "mkfs.xfs -f /dev/sdb",
+      "mkdir -p /var/lib/etcd",
+      "mount /dev/sdb /var/lib/etcd"
+    ]
+  }
 }
