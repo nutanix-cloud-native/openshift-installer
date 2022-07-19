@@ -3,6 +3,11 @@ package nutanix
 import (
 	"context"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -28,6 +33,7 @@ type clusterUninstaller struct {
 	infraID   string
 	v3Client  *nutanixclientv3.Client
 	logger    logrus.FieldLogger
+	kclnt     *kubernetes.Clientset
 }
 
 // New returns an Nutanix destroyer from ClusterMetadata.
@@ -42,11 +48,22 @@ func New(logger logrus.FieldLogger, metadata *installertypes.ClusterMetadata) (p
 		return nil, err
 	}
 
+	rootDir := "."
+	config, err := clientcmd.BuildConfigFromFlags("", filepath.Join(rootDir, "auth", "kubeconfig"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to build kubeconfig: %v", err)
+	}
+	kclnt, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create kubernetes client: %v", err)
+	}
+
 	return &clusterUninstaller{
 		clusterID: metadata.ClusterID,
 		infraID:   metadata.InfraID,
 		v3Client:  v3Client,
 		logger:    logger,
+		kclnt:     kclnt,
 	}, nil
 }
 
@@ -66,6 +83,7 @@ func (o *clusterUninstaller) destroyCluster() (bool, error) {
 		name    string
 		execute func(*clusterUninstaller) error
 	}{
+		{name: "PVs", execute: cleanupPVs},
 		{name: "VMs", execute: cleanupVMs},
 		{name: "Images", execute: cleanupImages},
 		{name: "Categories", execute: cleanupCategories},
@@ -174,6 +192,42 @@ func cleanupCategories(o *clusterUninstaller) error {
 
 	if categoryDeletionFailed {
 		return fmt.Errorf("failed to delete category")
+	}
+
+	return nil
+}
+
+func cleanupPVs(o *clusterUninstaller) error {
+	ctx := context.TODO()
+	namespaces, err := o.kclnt.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+	for _, namespace := range namespaces.Items {
+		pvcs, err := o.kclnt.CoreV1().PersistentVolumeClaims(namespace.Name).List(ctx, metav1.ListOptions{})
+		if err != nil {
+			return err
+		}
+		for _, pvc := range pvcs.Items {
+			if _, err := o.kclnt.CoreV1().PersistentVolumeClaims(namespace.Name).Patch(ctx, pvc.Name, types.MergePatchType, []byte(`{"metadata":{"finalizers":null}}`), metav1.PatchOptions{}); err != nil {
+				return err
+			}
+			if err := o.kclnt.CoreV1().PersistentVolumeClaims(namespace.Name).Delete(ctx, pvc.Name, metav1.DeleteOptions{}); err != nil {
+				return err
+			}
+		}
+		pvs, err := o.kclnt.CoreV1().PersistentVolumes().List(ctx, metav1.ListOptions{})
+		if err != nil {
+			return err
+		}
+		for _, pv := range pvs.Items {
+			if _, err := o.kclnt.CoreV1().PersistentVolumes().Patch(ctx, pv.Name, types.MergePatchType, []byte(`{"metadata":{"finalizers":null}}`), metav1.PatchOptions{}); err != nil {
+				return err
+			}
+			if err := o.kclnt.CoreV1().PersistentVolumes().Delete(ctx, pv.Name, metav1.DeleteOptions{}); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
