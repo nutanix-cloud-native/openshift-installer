@@ -38,6 +38,30 @@ resource "nutanix_image" "rhcos" {
   }
 }
 
+data "ignition_file" "hostname" {
+  count = var.master_count
+  mode  = "420" // 0644
+  path  = "/etc/hostname"
+
+  content {
+    content = <<EOF
+${var.cluster_id}-master-${count.index}
+EOF
+  }
+}
+
+data "ignition_config" "master_ignition_config" {
+  count = var.master_count
+
+  merge {
+    source = "data:text/plain;charset=utf-8;base64,${base64encode(var.ignition_master)}"
+  }
+
+  files = [
+    element(data.ignition_file.hostname.*.rendered, count.index)
+  ]
+}
+
 resource "nutanix_virtual_machine" "vm_master" {
   count                = var.master_count
   description          = local.description
@@ -71,7 +95,7 @@ resource "nutanix_virtual_machine" "vm_master" {
     value = nutanix_category_value.ocp_category_value_owned.value
   }
 
-  guest_customization_cloud_init_user_data = base64encode(var.ignition_master)
+  guest_customization_cloud_init_user_data = base64encode(element(data.ignition_config.master_ignition_config.*.rendered, count.index))
   nic_list {
     subnet_uuid = var.nutanix_subnet_uuid
   }
